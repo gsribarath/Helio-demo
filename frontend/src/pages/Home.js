@@ -24,6 +24,9 @@ import {
   FaComments
 } from 'react-icons/fa';
 
+import './HomeDoctors.css';
+import TransText from '../components/TransText';
+
 
 const Home = () => {
   const { t } = useTranslation();
@@ -169,7 +172,7 @@ const Home = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-64">
           <div className="loading"></div>
-          <span className="ml-2">Loading doctors...</span>
+          <span className="ml-2">{t('loading_doctors')}</span>
         </div>
       </div>
     );
@@ -180,22 +183,34 @@ const Home = () => {
       {/* Professional Header with Helio Branding */}
       <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12">
         <div className="container mx-auto px-6 text-center">
+          <div className="px-6 text-center">
           <h1 className="text-4xl font-black mb-4 tracking-tight">
-            Welcome to <span className="text-primary-light">Helio</span>
+            {t('welcome_message')}
           </h1>
           <p className="text-xl text-primary-light font-medium">
-            Connecting rural patients with doctors through telemedicine
+            {t('app_description')}
           </p>
           <p className="text-primary-light mt-2">
-            Find and consult with qualified doctors in your area
+            {t('find_your_doctor')}
           </p>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-8 pb-40">
+        {/* My Appointments button centered above the Find Your Doctor card */}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => navigate('/my-appointments')}
+            aria-label={t('my_appointments')}
+            className="my-appointments-btn w-full sm:w-auto max-w-xs"
+          >
+            {t('my_appointments')}
+          </button>
+        </div>
         {/* Search and Filters - Centered and Professional */}
         <div className="max-w-4xl mx-auto card-elevated" style={{marginBottom: '0.1cm'}}>
-          <h2 className="text-2xl font-bold text-text-primary mb-6 text-center">Find Your Doctor</h2>
+          <h2 className="text-2xl font-bold text-text-primary mb-6 text-center">{t('find_your_doctor')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Search */}
             <div className="input-group">
@@ -217,7 +232,7 @@ const Home = () => {
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
                 className="input has-icon"
               >
-                <option value="">All Specialties</option>
+                <option value="">{t('all_specialties')}</option>
                 {specialties.map(specialty => (
                   <option key={specialty} value={specialty}>{specialty}</option>
                 ))}
@@ -234,7 +249,7 @@ const Home = () => {
                 className="w-5 h-5 rounded border-border-color text-primary-color focus:ring-2 focus:ring-primary-color"
               />
               <label htmlFor="availableOnly" className="text-base font-medium text-text-primary">
-                {t('available')} only
+                {t('available_only')}
               </label>
             </div>
           </div>
@@ -268,9 +283,9 @@ const Home = () => {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-xl text-text-primary mb-1 truncate">{doctor.name}</h3>
-                      <p className="text-primary-color font-semibold text-lg">{doctor.specialty}</p>
-                      <p className="text-sm text-text-secondary mb-2">{doctor.qualifications}</p>
+                      <h3 className="font-bold text-xl text-text-primary mb-1 truncate"><TransText text={doctor.name} /></h3>
+                      <p className="text-primary-color font-semibold text-lg"><TransText text={doctor.specialty} /></p>
+                      <p className="text-sm text-text-secondary mb-2"><TransText text={doctor.qualifications} /></p>
                       
                       {/* Availability Status */}
                       <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
@@ -284,21 +299,19 @@ const Home = () => {
                   </div>
 
                   {/* Doctor Info */}
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-2">
-                      <FaClock className="text-text-muted text-sm" />
-                      <span className="text-sm text-text-secondary font-medium">
-                        {doctor.experience_years} years experience
-                      </span>
+                  <div className="doctor-details mb-6">
+                    <div className="detail-row">
+                      <FaClock className="detail-icon" />
+                      <div className="detail-text">{doctor.experience_years} {t('years_experience_other', { count: doctor.experience_years })}</div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <FaLanguage className="text-text-muted text-sm" />
-                      <span className="text-sm text-text-secondary">{doctor.languages}</span>
+                    <div className="detail-row">
+                      <FaLanguage className="detail-icon" />
+                      <div className="detail-text"><TransText text={doctor.languages} /></div>
                     </div>
 
-                    <div className="text-center py-2">
-                      <span className="text-lg font-bold text-success-color">Free Consultation</span>
+                    <div className="detail-row detail-center">
+                      <span className="text-lg font-bold text-success-color">{t('free_consultation')}</span>
                     </div>
                   </div>
                 </div>
@@ -315,10 +328,10 @@ const Home = () => {
                       className={`btn btn-success py-2 px-3 text-sm ${
                         doctor.is_available ? '' : 'opacity-60 cursor-not-allowed'
                       }`}
-                      aria-label={`Consult ${doctor.name} by video call`}
+                      aria-label={`${t('consult_now')} ${doctor.name} ${t('video').toLowerCase()}`}
                     >
                       <FaVideo className="text-xs" />
-                      Video
+                      {t('video')}
                     </button>
 
                     {/* Audio Call */}
@@ -330,20 +343,20 @@ const Home = () => {
                       className={`btn btn-secondary py-2 px-3 text-sm ${
                         doctor.is_available ? '' : 'opacity-60 cursor-not-allowed'
                       }`}
-                      aria-label={`Consult ${doctor.name} by audio call`}
+                      aria-label={`${t('consult_now')} ${doctor.name} ${t('audio').toLowerCase()}`}
                     >
                       <FaPhone className="text-xs" />
-                      Audio
+                      {t('audio')}
                     </button>
 
                     {/* Book Appointment */}
                     <button
                       onClick={() => handleBookAppointment(doctor.id)}
                       className="btn btn-outline py-2 px-3 text-sm"
-                      aria-label={`Book appointment with ${doctor.name}`}
+                      aria-label={`${t('book_appointment')} ${doctor.name}`}
                     >
                       <FaCalendar className="text-xs" />
-                      Book
+                      {t('book')}
                     </button>
                   </div>
                 </div>
@@ -356,9 +369,9 @@ const Home = () => {
         {filteredDoctors.length === 0 && !loading && (
           <div className="text-center py-16">
             <FaUserMd className="mx-auto text-8xl text-text-muted mb-6" />
-            <h3 className="text-2xl font-bold text-text-primary mb-4">No doctors found</h3>
+            <h3 className="text-2xl font-bold text-text-primary mb-4">{t('no_doctors_found')}</h3>
             <p className="text-text-secondary text-lg">
-              Try adjusting your search criteria or filters
+              {t('try_adjusting_filters')}
             </p>
           </div>
         )}
@@ -369,7 +382,7 @@ const Home = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
           <div className="card w-96 max-w-95vw">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-text-primary">Choose Consultation Type</h3>
+              <h3 className="text-xl font-semibold text-text-primary">{t('choose_consultation_type')}</h3>
               <button
                 onClick={() => setShowConsultModal(false)}
                 className="text-text-muted hover:text-text-primary focus-ring p-2 rounded-lg"
@@ -394,7 +407,7 @@ const Home = () => {
                 className="btn btn-primary w-full"
               >
                 <FaVideo className="text-xl" />
-                <span className="font-medium">Video Call</span>
+                <span className="font-medium">{t('video')}</span>
               </button>
               
               <button
@@ -405,7 +418,7 @@ const Home = () => {
                 className="btn btn-success w-full"
               >
                 <FaMicrophone className="text-xl" />
-                <span className="font-medium">Audio Call</span>
+                <span className="font-medium">{t('audio')}</span>
               </button>
             </div>
           </div>

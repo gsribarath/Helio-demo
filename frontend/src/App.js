@@ -16,9 +16,10 @@ import Settings from './pages/Settings';
 import VideoCallPage from './pages/VideoCallPage';
 import AudioCallPage from './pages/AudioCallPage';
 import Reports from './pages/Reports';
+import MyAppointments from './pages/MyAppointments';
 
 function App() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,7 @@ function App() {
           <div className="w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
             <span className="text-2xl font-bold text-white">H</span>
           </div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -94,6 +95,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/my-appointments" element={<MyAppointments />} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/medicines" element={<Medicines />} />
           <Route path="/reports" element={<Reports />} />
@@ -111,7 +113,7 @@ function App() {
       // Doctor dashboard routes (to be implemented)
       return (
         <Routes>
-          <Route path="/" element={<div className="p-6"><h1 className="text-2xl font-bold">Doctor Dashboard</h1><p>Welcome, Dr. {user.profile?.first_name || user.username}!</p><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">Logout</button></div>} />
+          <Route path="/" element={<div className="p-6"><h1 className="text-2xl font-bold">{t('doctor_dashboard')}</h1><p>{t('welcome_doctor', { name: user.profile?.first_name || user.username })}</p><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">{t('logout')}</button></div>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       );
@@ -119,7 +121,7 @@ function App() {
       // Pharmacist dashboard routes (to be implemented)
       return (
         <Routes>
-          <Route path="/" element={<div className="p-6"><h1 className="text-2xl font-bold">Pharmacy Dashboard</h1><p>Welcome, {user.profile?.pharmacy_name || user.username}!</p><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">Logout</button></div>} />
+          <Route path="/" element={<div className="p-6"><h1 className="text-2xl font-bold">{t('pharmacy_dashboard')}</h1><p>{t('welcome_pharmacy', { name: user.profile?.pharmacy_name || user.username })}</p><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">{t('logout')}</button></div>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       );
@@ -128,7 +130,7 @@ function App() {
     // Fallback for unknown roles
     return (
       <Routes>
-        <Route path="*" element={<div className="p-6"><h1>Unknown Role</h1><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">Logout</button></div>} />
+        <Route path="*" element={<div className="p-6"><h1>{t('unknown_role')}</h1><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">{t('logout')}</button></div>} />
       </Routes>
     );
   };

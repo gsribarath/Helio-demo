@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiLogOut } from 'react-icons/fi';
 
 // Minimal, clean header: App name on the left, Logout button on the right
 const Navbar = ({ user, onLogout }) => {
+  const { t } = useTranslation();
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200"
@@ -50,8 +52,8 @@ const Navbar = ({ user, onLogout }) => {
             <div className="mr-0 pr-0" style={{ paddingRight: 0 }}>
               <button
                 onClick={onLogout}
-                title="Logout"
-                aria-label="Logout"
+                title={t('logout')}
+                aria-label={t('logout')}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -67,7 +69,7 @@ const Navbar = ({ user, onLogout }) => {
                 }}
               >
                 <FiLogOut style={{ fontSize: 18, color: '#dc2626' }} />
-                <span>Logout</span>
+                <span>{t('logout')}</span>
               </button>
             </div>
           )}

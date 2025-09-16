@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { appointmentAPI } from '../services/api';
@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa';
 
 const Appointments = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const selectedDoctor = location.state?.selectedDoctor;
   
@@ -31,28 +31,29 @@ const Appointments = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [appointmentId, setAppointmentId] = useState('');
+  const [showToast, setShowToast] = useState(false);
 
   // Specialist options
   const specialists = [
-    'General Physician',
-    'Cardiologist',
-    'Dermatologist',
-    'Pediatrician',
-    'Orthopedic',
-    'Neurologist',
-    'Gynecologist',
-    'ENT Specialist',
-    'Psychiatrist',
-    'Ophthalmologist'
+    { key: 'general_physician' },
+    { key: 'cardiologist' },
+    { key: 'dermatologist' },
+    { key: 'pediatrician' },
+    { key: 'orthopedic' },
+    { key: 'neurologist' },
+    { key: 'gynecologist' },
+    { key: 'ent_specialist' },
+    { key: 'psychiatrist' },
+    { key: 'ophthalmologist' }
   ];
 
   // Hospital options
   const hospitals = [
-    'Civil Hospital',
-    'Government General Hospital',
-    'District Hospital',
-    'Primary Health Center',
-    'Community Health Center'
+    { key: 'civil_hospital' },
+    { key: 'general_hospital' },
+    { key: 'district_hospital' },
+    { key: 'primary_health_center' },
+    { key: 'community_health_center' }
   ];
 
   // Time slots
@@ -78,7 +79,7 @@ const Appointments = () => {
     // Validate required fields
     if (!formData.patientName || !formData.age || !formData.healthIssue || 
         !formData.specialist || !formData.preferredDate || !formData.preferredTime) {
-      alert('Please fill in all required fields.');
+      alert(t('validation_required_fields'));
       return;
     }
 
@@ -92,10 +93,36 @@ const Appointments = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       setAppointmentId(id);
+
+      // Persist appointment to localStorage (real user-created data only)
+      try {
+        const storageKey = 'helio_appointments';
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const newAppointment = {
+          id,
+          patientName: formData.patientName,
+          age: formData.age,
+          healthIssue: formData.healthIssue,
+          specialist: formData.specialist,
+          date: formData.preferredDate, // YYYY-MM-DD
+          time: formData.preferredTime, // e.g., 04:30 PM
+          hospitalName: formData.hospitalName,
+          doctor: selectedDoctor?.name || null,
+          doctorId: selectedDoctor?.id || null,
+          status: 'upcoming',
+          createdAt: new Date().toISOString()
+        };
+        existing.push(newAppointment);
+        localStorage.setItem(storageKey, JSON.stringify(existing));
+      } catch (err) {
+        console.error('Failed to store appointment:', err);
+      }
+
       setShowConfirmation(true);
+      setShowToast(true);
     } catch (error) {
       console.error('Error booking appointment:', error);
-      alert('Failed to book appointment. Please try again.');
+      alert(t('booking_failed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -129,79 +156,54 @@ const Appointments = () => {
     return maxDate.toISOString().split('T')[0];
   };
 
-  if (showConfirmation) {
-    return (
-      <div className="min-h-screen bg-bg-secondary py-8 px-4 pb-40">
-        <div className="max-w-3xl mx-auto">
-          <div className="card text-center">
-            <div className="mb-6">
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <FaCheck className="text-green-600 text-2xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary mb-2">Appointment Confirmed!</h2>
-              <p className="text-text-secondary">Your appointment has been successfully booked.</p>
-            </div>
-            
-            <div className="bg-bg-secondary rounded-lg p-6 mb-6">
-              <h3 className="font-semibold text-text-primary mb-4">Appointment Details</h3>
-              <div className="space-y-3 text-left">
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Appointment ID:</span>
-                  <span className="font-medium text-primary-color">{appointmentId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Patient Name:</span>
-                  <span className="font-medium text-text-primary">{formData.patientName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Age:</span>
-                  <span className="font-medium text-text-primary">{formData.age} years</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Date & Time:</span>
-                  <span className="font-medium text-text-primary">{formData.preferredDate} at {formData.preferredTime}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Specialist:</span>
-                  <span className="font-medium text-text-primary">{formData.specialist}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Hospital:</span>
-                  <span className="font-medium text-text-primary">{formData.hospitalName}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-sm text-text-secondary mb-6">
-              <p>📱 SMS confirmation sent to your phone</p>
-              <p>📧 Email confirmation sent to your email</p>
-            </div>
-            
-            <button
-              onClick={handleReset}
-              className="btn btn-primary"
-            >
-              Book Another Appointment
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Show the page always; display inline confirmation card under header when booking succeeds
+
+  // Auto-dismiss the floating toast after 4s
+  useEffect(() => {
+    if (showToast) {
+      const t = setTimeout(() => setShowToast(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [showToast]);
 
   return (
-    <div className="min-h-screen bg-bg-secondary py-8 px-4 pb-32">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-bg-secondary py-8 px-4 pb-32 page-centered-mobile">
+      <div className="max-w-3xl mx-auto w-full mobile-center-card">
         {/* Page Header (text-only) */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Book Appointment</h1>
-          <p className="text-text-secondary">Schedule your consultation with our healthcare professionals</p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">{t('book_appointment_title')}</h1>
+          <p className="text-text-secondary">{t('schedule_your_consultation')}</p>
         </div>
+
+        {/* Inline confirmation that appears under header when showConfirmation is true */}
+        {showConfirmation && (
+          <div className="max-w-md mx-auto mb-6 w-full px-2">
+            <div className="bg-white rounded-xl shadow-md p-4 text-center border border-green-100">
+              <div className="flex items-center justify-center mb-2">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <FaCheck className="text-green-600 text-xl" />
+                </div>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('booked_success')}</h2>
+              <p className="text-sm text-gray-600 mb-3">{t('booked_note')}</p>
+
+              <div className="bg-white rounded-lg p-3 text-left border">
+                <h3 className="font-semibold mb-2">{t('appointment_details')}</h3>
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between"><span className="text-green-600">{t('appointment_id')}</span><span className="font-medium text-green-700">{appointmentId}</span></div>
+                  <div className="flex justify-between"><span className="text-green-600">{t('patient_label')}</span><span className="font-medium text-green-700">{formData.patientName}</span></div>
+                  <div className="flex justify-between"><span className="text-green-600">{t('date_time')}</span><span className="font-medium text-green-700">{formData.preferredDate} {formData.preferredTime}</span></div>
+                  <div className="flex justify-between"><span className="text-green-600">{t('specialist_label')}</span><span className="font-medium text-green-700">{t(`specialists.${formData.specialist}`) || formData.specialist}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Selected Doctor Details */}
         {selectedDoctor && (
           <div className="card mb-6">
-            <h2 className="text-xl font-semibold text-text-primary mb-3">Selected Doctor</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-3">{t('selected_doctor')}</h2>
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-text-primary">{selectedDoctor.name}</h3>
@@ -211,7 +213,7 @@ const Appointments = () => {
                 )}
                 <div className="flex items-center gap-4 mt-1 text-sm text-text-muted">
                   {selectedDoctor.experience_years && (
-                    <span>{selectedDoctor.experience_years} years experience</span>
+                    <span>{selectedDoctor.experience_years} {t('years_experience_other', { count: selectedDoctor.experience_years })}</span>
                   )}
                   {selectedDoctor.languages && <span>{selectedDoctor.languages}</span>}
                 </div>
@@ -220,21 +222,21 @@ const Appointments = () => {
           </div>
         )}
 
-        {/* Appointment Form */}
-        <div className="card">
+  {/* Appointment Form */}
+  <div className="card w-full max-w-md mx-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Patient Name */}
             <div className="input-group">
               <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
                 <FaUser className="text-primary-color" />
-                Patient Name *
+                {t('patient_name')} *
               </label>
               <input
                 type="text"
                 name="patientName"
                 value={formData.patientName}
                 onChange={handleInputChange}
-                placeholder="Enter patient name"
+                placeholder={t('enter_patient_name')}
                 className="input"
                 required
               />
@@ -244,14 +246,14 @@ const Appointments = () => {
             <div className="input-group">
               <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
                 <FaBirthdayCake className="text-primary-color" />
-                Age *
+                {t('age')} *
               </label>
               <input
                 type="number"
                 name="age"
                 value={formData.age}
                 onChange={handleInputChange}
-                placeholder="Enter age"
+                placeholder={t('enter_age')}
                 min="1"
                 max="120"
                 className="input"
@@ -263,13 +265,13 @@ const Appointments = () => {
             <div className="input-group">
               <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
                 <FaFileAlt className="text-primary-color" />
-                Health Issue *
+                {t('health_issue')} *
               </label>
               <textarea
                 name="healthIssue"
                 value={formData.healthIssue}
                 onChange={handleInputChange}
-                placeholder="Describe your symptoms or health concerns"
+                placeholder={t('describe_symptoms')}
                 rows="4"
                 className="input resize-none"
                 required
@@ -278,9 +280,7 @@ const Appointments = () => {
 
             {/* Specialist Required */}
             <div className="input-group">
-              <label className="text-sm font-medium text-text-primary mb-2">
-                Specialist Required *
-              </label>
+              <label className="text-sm font-medium text-text-primary mb-2">{t('specialist_required')} *</label>
               <select
                 name="specialist"
                 value={formData.specialist}
@@ -288,10 +288,10 @@ const Appointments = () => {
                 className="input"
                 required
               >
-                <option value="">Select specialist</option>
-                {specialists.map((specialist) => (
-                  <option key={specialist} value={specialist}>
-                    {specialist}
+                <option value="">{t('select_specialist')}</option>
+                {specialists.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {t(`specialists.${s.key}`)}
                   </option>
                 ))}
               </select>
@@ -301,7 +301,7 @@ const Appointments = () => {
             <div className="input-group">
               <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
                 <FaCalendarAlt className="text-primary-color" />
-                Preferred Date *
+                {t('preferred_date')} *
               </label>
               <input
                 type="date"
@@ -319,7 +319,7 @@ const Appointments = () => {
             <div className="input-group">
               <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
                 <FaClock className="text-primary-color" />
-                Preferred Time *
+                {t('preferred_time')} *
               </label>
               <select
                 name="preferredTime"
@@ -328,7 +328,7 @@ const Appointments = () => {
                 className="input"
                 required
               >
-                <option value="">Select time</option>
+                <option value="">{t('select_time')}</option>
                 {timeSlots.map((time) => (
                   <option key={time} value={time}>
                     {time}
@@ -341,7 +341,7 @@ const Appointments = () => {
             <div className="input-group">
               <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
                 <FaHospital className="text-primary-color" />
-                Hospital Name
+                {t('hospital_name')}
               </label>
               <select
                 name="hospitalName"
@@ -349,9 +349,9 @@ const Appointments = () => {
                 onChange={handleInputChange}
                 className="input"
               >
-                {hospitals.map((hospital) => (
-                  <option key={hospital} value={hospital}>
-                    {hospital}
+                {hospitals.map((h) => (
+                  <option key={h.key} value={t(`hospitals.${h.key}`)}>
+                    {t(`hospitals.${h.key}`)}
                   </option>
                 ))}
               </select>
@@ -359,29 +359,38 @@ const Appointments = () => {
 
             {/* Submit Button */}
             <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`btn btn-primary w-full ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Booking Appointment...
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    Book Appointment
-                  </div>
-                )}
-              </button>
+                <div className="flex justify-center">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`btn btn-primary ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                    style={{ minWidth: 220 }}>
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        {t('booking')} {t('appointments')}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        {t('book_appointment')}
+                      </div>
+                    )}
+                  </button>
+                </div>
             </div>
           </form>
         </div>
 
         {/* Important Information section removed as requested */}
+
+        {/* Floating centered success popup (also appears when confirmation is shown) */}
+        {showToast && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+            <div className="pointer-events-auto confirmation-toast" style={{zIndex:60}}>
+              {t('booked_toast')}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
