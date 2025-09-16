@@ -1,0 +1,33 @@
+.doctor-details{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.detail-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.detail-icon{
+  color:var(--text-muted, #6b7280);
+  font-size:14px;
+  min-width:18px;
+}
+
+.detail-text{
+  color:var(--text-secondary, #6b7280);
+  font-size:14px;
+}
+
+.detail-center{
+  justify-content:center;
+  text-align:center;
+}
+
+/* Adjustments for small screens */
+@media (max-width:480px){
+  .detail-row{gap:8px}
+  .detail-text{font-size:13px}
+}

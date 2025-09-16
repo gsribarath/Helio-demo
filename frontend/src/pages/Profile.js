@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import TransText from '../components/TransText';
 import { 
   FaUser, 
   FaEdit, 
@@ -107,13 +108,13 @@ const Profile = () => {
       <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl font-black mb-4 tracking-tight">
-            Patient <span className="text-primary-light">Profile</span>
+            {t('patient')} <span className="text-primary-light">{t('profile')}</span>
           </h1>
           <p className="text-xl text-primary-light font-medium">
-            {profileData.name} • Age {profileData.age} • {profileData.gender}
+            <TransText text={profileData.name} /> • {t('age')} {profileData.age} {t('years_suffix')} • <TransText text={profileData.gender} />
           </p>
           <p className="text-primary-light mt-2">
-            Manage your personal and medical information
+            {t('manage_personal_medical_info')}
           </p>
         </div>
       </div>
@@ -125,7 +126,7 @@ const Profile = () => {
           <div className="card-elevated" style={{marginBottom: '0.1cm'}}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-text-primary">
-                Personal Information
+                {t('personal_information')}
               </h3>
               <button
                 onClick={() => setIsEditing(!isEditing)}
@@ -136,7 +137,7 @@ const Profile = () => {
                 }`}
               >
                 {isEditing ? <FaTimes /> : <FaEdit />}
-                {isEditing ? 'Cancel' : 'Edit'}
+                {isEditing ? t('cancel') : t('edit')}
               </button>
             </div>
 
@@ -159,7 +160,7 @@ const Profile = () => {
                   
                   <div style={{marginBottom: '0.1cm'}}>
                     <label className="block text-sm font-semibold text-text-primary mb-2">
-                      Full Name
+                      {t('full_name')}
                     </label>
                     {isEditing ? (
                       <input
@@ -170,13 +171,13 @@ const Profile = () => {
                         className="input"
                       />
                     ) : (
-                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light">{profileData.name}</p>
+                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light"><TransText text={profileData.name} /></p>
                     )}
                   </div>
 
                   <div style={{marginBottom: '0.1cm'}}>
                     <label className="block text-sm font-semibold text-text-primary mb-2">
-                      Age
+                      {t('age')}
                     </label>
                     {isEditing ? (
                       <input
@@ -187,13 +188,13 @@ const Profile = () => {
                         className="input"
                       />
                     ) : (
-                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light">{profileData.age} years</p>
+                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light">{profileData.age} {t('years_suffix')}</p>
                     )}
                   </div>
 
                   <div style={{marginBottom: '0.1cm'}}>
                     <label className="block text-sm font-semibold text-text-primary mb-2">
-                      Gender
+                      {t('gender')}
                     </label>
                     {isEditing ? (
                       <select
@@ -202,18 +203,18 @@ const Profile = () => {
                         onChange={handleInputChange}
                         className="input"
                       >
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="Male">{t('male')}</option>
+                        <option value="Female">{t('female')}</option>
+                        <option value="Other">{t('other')}</option>
                       </select>
                     ) : (
-                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light">{profileData.gender}</p>
+                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light"><TransText text={profileData.gender} /></p>
                     )}
                   </div>
 
                   <div style={{marginBottom: '0.1cm'}}>
                     <label className="block text-sm font-semibold text-text-primary mb-2">
-                      Contact Number
+                      {t('phone_number')}
                     </label>
                     {isEditing ? (
                       <input
@@ -230,7 +231,7 @@ const Profile = () => {
 
                   <div style={{marginBottom: '0.1cm'}}>
                     <label className="block text-sm font-semibold text-text-primary mb-2">
-                      Address
+                      {t('address')}
                     </label>
                     {isEditing ? (
                       <textarea
@@ -241,7 +242,7 @@ const Profile = () => {
                         className="input resize-none"
                       />
                     ) : (
-                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light">{profileData.address}</p>
+                      <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light"><TransText text={profileData.address} /></p>
                     )}
                   </div>
                 </div>
@@ -253,7 +254,7 @@ const Profile = () => {
                       className="btn btn-success"
                     >
                       <FaSave className="mr-2" />
-                      Save Changes
+                      {t('save_changes')}
                     </button>
                   </div>
                 )}
@@ -264,7 +265,7 @@ const Profile = () => {
           {/* Medical Information Card - Text Only Layout */}
           <div className="card-elevated" style={{marginBottom: '0.1cm'}}>
             <h3 className="text-xl font-bold text-text-primary mb-6">
-              Medical Information
+              {t('medical_information')}
             </h3>
 
             <div className="space-y-4" style={{gap: '0.1cm'}}>
@@ -272,7 +273,7 @@ const Profile = () => {
               {/* Blood Group */}
               <div style={{marginBottom: '0.1cm'}}>
                 <label className="block text-sm font-semibold text-text-primary mb-2">
-                  Blood Group
+                  {t('blood_group')}
                 </label>
                 <p className="text-text-primary bg-red-50 px-4 py-3 rounded-lg border border-red-200 font-bold text-lg">{profileData.blood_group}</p>
               </div>
@@ -280,7 +281,7 @@ const Profile = () => {
               {/* Height */}
               <div style={{marginBottom: '0.1cm'}}>
                 <label className="block text-sm font-semibold text-text-primary mb-2">
-                  Height
+                  {t('height')}
                 </label>
                 <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light font-semibold">{profileData.height}</p>
               </div>
@@ -288,7 +289,7 @@ const Profile = () => {
               {/* Weight */}
               <div style={{marginBottom: '0.1cm'}}>
                 <label className="block text-sm font-semibold text-text-primary mb-2">
-                  Weight
+                  {t('weight')}
                 </label>
                 <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light font-semibold">{profileData.weight}</p>
               </div>
@@ -296,7 +297,7 @@ const Profile = () => {
               {/* Insurance */}
               <div style={{marginBottom: '0.1cm'}}>
                 <label className="block text-sm font-semibold text-text-primary mb-2">
-                  Insurance
+                  {t('insurance')}
                 </label>
                 <p className="text-text-primary bg-bg-secondary px-4 py-3 rounded-lg border border-border-light text-sm font-semibold break-words">{profileData.insurance_number}</p>
               </div>
@@ -304,10 +305,10 @@ const Profile = () => {
               {/* Emergency Contact */}
               <div style={{marginBottom: '0.1cm'}}>
                 <label className="block text-sm font-semibold text-text-primary mb-2">
-                  Emergency Contact
+                  {t('emergency_contact')}
                 </label>
                 <p className="text-text-primary bg-orange-50 px-4 py-3 rounded-lg border border-orange-200 break-words">
-                  {profileData.emergency_contact_name} - {profileData.emergency_contact}
+                  <TransText text={profileData.emergency_contact_name} /> - {profileData.emergency_contact}
                 </p>
               </div>
             </div>
@@ -316,7 +317,7 @@ const Profile = () => {
           {/* Current Medical Conditions - Text Only */}
           <div className="card-elevated">
             <h3 className="text-xl font-bold text-text-primary mb-6">
-              Current Medical Conditions
+              {t('current_medical_conditions')}
             </h3>
 
             <div className="space-y-4" style={{gap: '0.1cm'}}>
@@ -324,24 +325,24 @@ const Profile = () => {
                 <div key={index} className="border border-border-light rounded-lg p-4 hover:shadow-md transition-all duration-300" style={{marginBottom: '0.1cm'}}>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-text-secondary">Condition</p>
-                      <p className="text-text-primary font-medium">{condition.condition}</p>
+                      <p className="text-sm font-semibold text-text-secondary">{t('condition')}</p>
+                      <p className="text-text-primary font-medium"><TransText text={condition.condition} /></p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-text-secondary">Diagnosed</p>
+                      <p className="text-sm font-semibold text-text-secondary">{t('diagnosed')}</p>
                       <p className="text-text-primary">{condition.diagnosed}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-text-secondary">Status</p>
+                      <p className="text-sm font-semibold text-text-secondary">{t('status')}</p>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
                         condition.status === 'Controlled' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {condition.status}
+                        <TransText text={condition.status} />
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-text-secondary">Current Medication</p>
-                      <p className="text-text-primary text-sm">{condition.medication}</p>
+                      <p className="text-sm font-semibold text-text-secondary">{t('current_medication')}</p>
+                      <p className="text-text-primary text-sm"><TransText text={condition.medication} /></p>
                     </div>
                   </div>
                 </div>

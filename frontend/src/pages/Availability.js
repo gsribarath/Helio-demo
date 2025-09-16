@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TransText from '../components/TransText';
 import { useNavigate } from 'react-router-dom';
 
 const Availability = () => {
@@ -81,9 +82,9 @@ const Availability = () => {
       <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl font-black mb-2 tracking-tight">
-            Doctor <span className="text-primary-light">Availability</span>
+            {t('doctors')} <span className="text-primary-light">{t('availability')}</span>
           </h1>
-          <p className="text-primary-light">View schedules and book appointments with available doctors</p>
+          <p className="text-primary-light">{t('availability_hero_copy')}</p>
         </div>
       </div>
 
@@ -93,12 +94,12 @@ const Availability = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
             <div>
-              <label htmlFor="doctor-search" className="block text-sm font-semibold text-text-primary mb-1">Search doctors</label>
+              <label htmlFor="doctor-search" className="block text-sm font-semibold text-text-primary mb-1">{t('search_doctors')}</label>
               <div className="input-wrapper">
                 <input
                   id="doctor-search"
                   type="text"
-                  placeholder="Search by name, specialty, or location..."
+                  placeholder={t('search_doctors_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="input"
@@ -107,7 +108,7 @@ const Availability = () => {
                 {searchTerm && (
                   <button
                     type="button"
-                    aria-label="Clear search"
+                    aria-label={t('clear_search')}
                     className="input-clear-btn"
                     onClick={() => setSearchTerm('')}
                   >
@@ -119,7 +120,7 @@ const Availability = () => {
 
             {/* Specialty Filter */}
             <div>
-              <label className="block text-sm font-semibold text-text-primary mb-1">Filter by specialty</label>
+              <label className="block text-sm font-semibold text-text-primary mb-1">{t('filter_by_specialty')}</label>
               <select
                 value={selectedSpecialty}
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
@@ -127,7 +128,7 @@ const Availability = () => {
               >
                 {specialties.map(specialty => (
                   <option key={specialty} value={specialty}>
-                    {specialty}
+                    <TransText text={specialty} />
                   </option>
                 ))}
               </select>
@@ -146,42 +147,42 @@ const Availability = () => {
               </colgroup>
               <thead>
                 <tr>
-                  <th className="text-left p-3 text-sm font-semibold text-text-primary">Doctor</th>
-                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">Timing</th>
-                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">Book</th>
+                  <th className="text-left p-3 text-sm font-semibold text-text-primary">{t('doctors')}</th>
+                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">{t('timing')}</th>
+                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">{t('book')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDoctors.map((doctor) => (
                   <tr key={doctor.id} className="hover:bg-gray-50">
-                    <td className="p-3 align-top break-words" data-label="Doctor">
+                    <td className="p-3 align-top break-words" data-label={t('doctors')}>
                       <div className="flex items-start gap-2">
-                        <span className={`availability-dot ${doctor.status === 'Available' ? 'available' : 'busy'}`} aria-label={doctor.status === 'Available' ? 'Available' : 'Busy'} title={doctor.status}>
+                        <span className={`availability-dot ${doctor.status === 'Available' ? 'available' : 'busy'}`} aria-label={doctor.status === 'Available' ? t('available') : t('busy')} title={doctor.status === 'Available' ? t('available') : t('busy')}>
                           {doctor.status === 'Available' ? '✓' : '✕'}
                         </span>
                         <div>
-                          <div className="font-medium text-text-primary leading-snug">{doctor.name}</div>
-                          <div className="text-xs text-text-secondary mt-0.5 leading-tight">{doctor.location}</div>
-                          <div className="text-xs text-text-primary mt-0.5 font-medium">{doctor.specialty}</div>
+                          <div className="font-medium text-text-primary leading-snug"><TransText text={doctor.name} /></div>
+                          <div className="text-xs text-text-secondary mt-0.5 leading-tight"><TransText text={doctor.location} /></div>
+                          <div className="text-xs text-text-primary mt-0.5 font-medium"><TransText text={doctor.specialty} /></div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-center align-top" data-label="Timing">
-                      <span className="text-xs text-text-secondary">{doctor.timing}</span>
+                    <td className="p-3 text-center align-top" data-label={t('timing')}>
+                      <span className="text-xs text-text-secondary"><TransText text={doctor.timing} /></span>
                     </td>
-                    <td className="p-3 text-center align-top" data-label="Book">
+                    <td className="p-3 text-center align-top" data-label={t('book')}>
                       {doctor.status === 'Available' ? (
                         <button
                           type="button"
                           onClick={() => handleBookAppointment(doctor)}
                           className="book-text font-semibold text-success link-reset"
-                          aria-label={`Book appointment with ${doctor.name}`}
-                          title="Book"
+                          aria-label={t('book_appointment_with', { name: doctor.name })}
+                          title={t('book')}
                         >
-                          Book
+                          {t('book')}
                         </button>
                       ) : (
-                        <span className="book-text font-semibold text-error" aria-label="Doctor busy">Busy</span>
+                        <span className="book-text font-semibold text-error" aria-label={t('doctor_busy')}>{t('busy')}</span>
                       )}
                     </td>
                   </tr>
@@ -193,11 +194,11 @@ const Availability = () => {
 
         {/* Results Summary / Empty State */}
         {filteredDoctors.length === 0 && (
-          <div className="text-center py-12 text-text-secondary">No doctors found</div>
+          <div className="text-center py-12 text-text-secondary">{t('no_doctors_found')}</div>
         )}
         {filteredDoctors.length > 0 && (
           <div className="mt-6 text-center text-text-secondary text-sm">
-            Showing {filteredDoctors.length} of {doctorsData.length} doctors
+            {t('showing_count_of_total_doctors', { shown: filteredDoctors.length, total: doctorsData.length })}
           </div>
         )}
       </div>

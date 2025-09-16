@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import TransText from '../components/TransText';
 import { useNavigate } from 'react-router-dom';
 import { doctorAPI, appointmentAPI } from '../services/api';
 import { 
@@ -181,10 +182,10 @@ const Schedule = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Doctor {t('schedule')}
+          {t('doctor_schedule')}
         </h1>
         <p className="text-gray-600">
-          View doctor availability and book appointments
+          {t('view_doctor_availability')}
         </p>
       </div>
 
@@ -193,7 +194,7 @@ const Schedule = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Doctor Selection */}
           <div>
-            <label className="label">Select Doctor</label>
+            <label className="label">{t('select_doctor')}</label>
             <div className="relative">
               <FaUserMd className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <select
@@ -212,7 +213,7 @@ const Schedule = () => {
 
           {/* Date Selection */}
           <div>
-            <label className="label">Select Date</label>
+            <label className="label">{t('select_date')}</label>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSelectedDate(getDateNavigation(-1))}
@@ -249,11 +250,11 @@ const Schedule = () => {
             <div>
               <div className="font-medium text-blue-900">
                 {formatDate(selectedDate)}
-                {isToday(selectedDate) && <span className="ml-2 text-sm text-blue-600">(Today)</span>}
+                {isToday(selectedDate) && <span className="ml-2 text-sm text-blue-600">({t('today')})</span>}
               </div>
               {selectedDoctorData && (
                 <div className="text-sm text-blue-700">
-                  {selectedDoctorData.name} - {selectedDoctorData.specialty}
+                  <TransText text={`${selectedDoctorData.name} - ${selectedDoctorData.specialty}`} />
                 </div>
               )}
             </div>
@@ -265,13 +266,13 @@ const Schedule = () => {
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <FaClock className="text-primary-color" />
-          Available Time Slots
+          {t('available_time_slots')}
         </h3>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="loading"></div>
-            <span className="ml-2">Loading slots...</span>
+            <span className="ml-2">{t('loading_slots')}</span>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -291,12 +292,12 @@ const Schedule = () => {
                   {slot.isAvailable ? (
                     <>
                       <FaCheckCircle className="text-green-600" />
-                      Available
+                      {t('available')}
                     </>
                   ) : (
                     <>
                       <FaTimesCircle className="text-red-600" />
-                      Booked
+                      {t('booked')}
                     </>
                   )}
                 </div>
@@ -307,7 +308,7 @@ const Schedule = () => {
 
         {availableSlots.length === 0 && !loading && (
           <div className="text-center py-8 text-gray-500">
-            No slots available for this date
+            {t('no_slots_for_date')}
           </div>
         )}
       </div>
@@ -315,7 +316,7 @@ const Schedule = () => {
       {/* Today's Appointments */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Appointments for {formatDate(selectedDate)}
+          {t('appointments_for_date', { date: formatDate(selectedDate) })}
         </h3>
 
         {appointments.length > 0 ? (
@@ -328,10 +329,10 @@ const Schedule = () => {
                   </div>
                   
                   <div>
-                    <div className="font-medium text-gray-900">{appointment.patient_name}</div>
+                    <div className="font-medium text-gray-900"><TransText text={appointment.patient_name} /></div>
                     <div className="text-sm text-gray-600">
                       {formatTime(new Date(appointment.appointment_date).toTimeString().slice(0, 5))} - 
-                      {appointment.duration_minutes} minutes
+                      {appointment.duration_minutes} {t('minutes')}
                     </div>
                   </div>
                 </div>
@@ -353,7 +354,7 @@ const Schedule = () => {
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                    <TransText text={appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)} />
                   </div>
                 </div>
               </div>
@@ -361,7 +362,7 @@ const Schedule = () => {
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
-            No appointments scheduled for this date
+            {t('no_appointments_for_date')}
           </div>
         )}
       </div>
@@ -371,7 +372,7 @@ const Schedule = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Book Appointment
+              {t('book_appointment')}
             </h3>
 
             <div className="space-y-4">
@@ -385,12 +386,12 @@ const Schedule = () => {
               </div>
 
               <div>
-                <label className="label">Consultation Type</label>
+                <label className="label">{t('consultation_type')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: 'video', icon: FaVideo, label: 'Video' },
-                    { value: 'phone', icon: FaPhone, label: 'Phone' },
-                    { value: 'chat', icon: FaComment, label: 'Chat' }
+                    { value: 'video', icon: FaVideo, label: t('video') },
+                    { value: 'phone', icon: FaPhone, label: t('phone') },
+                    { value: 'chat', icon: FaComment, label: t('chat') }
                   ].map(({ value, icon: Icon, label }) => (
                     <label
                       key={value}
@@ -416,12 +417,12 @@ const Schedule = () => {
               </div>
 
               <div>
-                <label htmlFor="symptoms" className="label">Symptoms (Optional)</label>
+                <label htmlFor="symptoms" className="label">{t('symptoms_optional')}</label>
                 <textarea
                   id="symptoms"
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
-                  placeholder="Describe your symptoms..."
+                  placeholder={t('describe_symptoms_placeholder')}
                   rows={3}
                   className="input resize-none"
                 />
@@ -432,13 +433,13 @@ const Schedule = () => {
                   onClick={() => setBookingModalOpen(false)}
                   className="btn btn-outline flex-1"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   onClick={handleBookAppointment}
                   className="btn btn-primary flex-1"
                 >
-                  Book Appointment
+                  {t('book_appointment')}
                 </button>
               </div>
             </div>

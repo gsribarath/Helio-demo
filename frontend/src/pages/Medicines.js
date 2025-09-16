@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import TransText from '../components/TransText';
 
 const Medicines = () => {
   const { t } = useTranslation();
@@ -146,7 +147,7 @@ const Medicines = () => {
       }, 1000);
     } catch (error) {
       console.error('Error fetching medicines:', error);
-      setError('Failed to load medicines');
+      setError('load_error');
       setMedicines(dummyMedicines); // Fallback to dummy data
       setLoading(false);
     }
@@ -215,7 +216,7 @@ const Medicines = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-64">
           <div className="loading"></div>
-          <span className="ml-2">Loading medicines...</span>
+          <span className="ml-2">{t('loading_medicines')}</span>
         </div>
       </div>
     );
@@ -227,21 +228,21 @@ const Medicines = () => {
       <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl font-black mb-2 tracking-tight">
-            {t('medicines')} <span className="text-primary-light">Inventory</span>
+            {t('medicines')} <span className="text-primary-light">{t('inventory')}</span>
           </h1>
-          <p className="text-primary-light">Real-time medicine stock and availability</p>
+          <p className="text-primary-light">{t('realtime_medicine_stock')}</p>
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-8 pb-40">
         {/* Search only (text-only, no icons) */}
         <div className="card-elevated mb-6 max-w-3xl mx-auto">
-          <label htmlFor="medicine-search" className="block text-sm font-semibold text-text-primary mb-1">Search medicines</label>
+          <label htmlFor="medicine-search" className="block text-sm font-semibold text-text-primary mb-1">{t('search_medicines')}</label>
           <div className="input-wrapper">
             <input
               id="medicine-search"
               type="text"
-              placeholder="Search medicines..."
+              placeholder={t('search_medicines_placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input"
@@ -250,7 +251,7 @@ const Medicines = () => {
             {searchTerm && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t('clear_search')}
                 className="input-clear-btn"
                 onClick={() => setSearchTerm('')}
               >
@@ -263,7 +264,7 @@ const Medicines = () => {
         {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg mb-6">
-            {error}
+            {t('failed_to_load_medicines')}
           </div>
         )}
 
@@ -279,39 +280,39 @@ const Medicines = () => {
               </colgroup>
               <thead>
                 <tr>
-                  <th className="text-left p-3 text-sm font-semibold text-text-primary">Medicine Name</th>
-                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">ID</th>
-                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">Stock</th>
-                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">Expiry</th>
+                  <th className="text-left p-3 text-sm font-semibold text-text-primary">{t('medicine_name')}</th>
+                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">{t('id')}</th>
+                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">{t('stock')}</th>
+                  <th className="text-center p-3 text-sm font-semibold text-text-primary nowrap">{t('expiry')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMedicines.map((medicine) => (
                   <tr key={medicine.id} className="hover:bg-gray-50">
-                    <td className="p-3 align-top break-words" data-label="Medicine Name">
+                    <td className="p-3 align-top break-words" data-label={t('medicine_name')}>
                       <div
                         className="font-medium clickable-name leading-snug"
                         onClick={() => handleMedicineClick(medicine)}
-                        title="Click to view pharmacy availability"
+                        title={t('view_pharmacy_availability')}
                       >
-                        {medicine.name}
+                        <TransText text={medicine.name} />
                       </div>
                       {/* Show only medicine name; generic/chemistry name removed as requested */}
                     </td>
-                    <td className="p-3 align-top text-center" data-label="ID">
+                    <td className="p-3 align-top text-center" data-label={t('id')}>
                       <div className="text-text-primary inline-block min-w-[2.75rem] tabular-nums nowrap">{formatCode(medicine.id)}</div>
                     </td>
-                    <td className="p-3 text-center align-top" data-label="Stock">
+                    <td className="p-3 text-center align-top" data-label={t('stock')}>
                       <span
                         className="text-xs font-semibold"
                         style={{
                           color: medicine.stock_quantity > 0 ? '#16a34a' : '#ef4444'
                         }}
                       >
-                        {medicine.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                        {medicine.stock_quantity > 0 ? t('in_stock') : t('out_of_stock')}
                       </span>
                     </td>
-                    <td className="p-3 text-center align-top" data-label="Expiry">
+                    <td className="p-3 text-center align-top" data-label={t('expiry')}>
                       <span className="expiry-date text-text-secondary tabular-nums">{formatDate(medicine.expiry_date)}</span>
                     </td>
                   </tr>
@@ -323,11 +324,11 @@ const Medicines = () => {
 
         {/* Results Summary / Empty State */}
         {filteredMedicines.length === 0 && (
-          <div className="text-center py-12 text-text-secondary">No medicines found</div>
+          <div className="text-center py-12 text-text-secondary">{t('no_medicines_found')}</div>
         )}
         {filteredMedicines.length > 0 && (
           <div className="mt-6 text-center text-text-secondary text-sm">
-            Showing {filteredMedicines.length} of {medicines.length} medicines
+            {t('showing_count_of_total', { shown: filteredMedicines.length, total: medicines.length })}
           </div>
         )}
       </div>
@@ -338,33 +339,33 @@ const Medicines = () => {
           <div className="modal-card">
             <div className="modal-header">
               <div>
-                <h3 className="text-lg font-semibold text-text-primary">{selectedMedicine.name}</h3>
+                <h3 className="text-lg font-semibold text-text-primary"><TransText text={selectedMedicine.name} /></h3>
                 {selectedMedicine.generic_name && (
-                  <p className="text-sm text-text-secondary">{selectedMedicine.generic_name}</p>
+                  <p className="text-sm text-text-secondary"><TransText text={selectedMedicine.generic_name} /></p>
                 )}
               </div>
               <button
                 onClick={closePharmacyModal}
                 className="modal-close-btn"
-                aria-label="Close modal"
-                title="Close"
+                aria-label={t('close_modal')}
+                title={t('close')}
               >
                 ×
               </button>
             </div>
 
             <div className="modal-body">
-              <h4 className="font-medium text-text-primary mb-3">Available at (Nabha Village):</h4>
+              <h4 className="font-medium text-text-primary mb-3">{t('available_at_location', { location: 'Nabha Village' })}</h4>
 
               {(() => {
                 const available = getPharmacyList(selectedMedicine.id).filter(p => (p.stock ?? 0) > 0);
                 if (available.length === 0) {
-                  return <div className="text-sm text-text-secondary">Currently unavailable at nearby pharmacies.</div>;
+                  return <div className="text-sm text-text-secondary">{t('currently_unavailable_nearby')}</div>;
                 }
                 return (
                   <ul className="space-y-2">
                     {available.map((pharmacy, index) => (
-                      <li key={index} className="font-medium text-text-primary">{pharmacy.name}</li>
+                      <li key={index} className="font-medium text-text-primary"><TransText text={pharmacy.name} /></li>
                     ))}
                   </ul>
                 );
@@ -372,7 +373,7 @@ const Medicines = () => {
             </div>
 
             <div className="modal-footer">
-              <button onClick={closePharmacyModal} className="btn btn-primary w-100">Close</button>
+              <button onClick={closePharmacyModal} className="btn btn-primary w-100">{t('close')}</button>
             </div>
           </div>
         </div>

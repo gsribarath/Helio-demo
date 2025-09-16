@@ -220,6 +220,18 @@ code {
   color: #ffffff;
 }
 
+/* Danger outline button (red) */
+.btn-outline-danger {
+  background-color: transparent;
+  border: 2px solid var(--error-color);
+  color: var(--error-color);
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background-color: var(--error-color);
+  color: #ffffff;
+}
+
 .btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.8rem;
@@ -228,6 +240,32 @@ code {
 .btn-lg {
   padding: 1rem 2rem;
   font-size: 1rem;
+}
+
+/* Dedicated filled blue pill button for prominent actions */
+.my-appointments-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px; /* pill */
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.my-appointments-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.my-appointments-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary-color) 35%, transparent);
 }
 
 .card {
@@ -397,6 +435,63 @@ code {
 
 .p-6 {
   padding: 1.5rem;
+}
+
+/* Mobile centering helpers: account for a fixed bottom nav (assumed 64px) */
+.page-centered-mobile {
+  /* default fallback, overridden at small viewports */
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .page-centered-mobile {
+    min-height: calc(100vh - 64px); /* leave space for a fixed bottom nav */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .mobile-center-card {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+}
+
+/* Strong green highlight for appointment details */
+.appointment-confirm-green {
+  background: var(--success-color); /* solid green */
+  box-shadow: 0 12px 30px rgba(16,185,129,0.18);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.appointment-confirm-green h3 {
+  color: white;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.appointment-confirm-green .muted {
+  color: rgba(255,255,255,0.9);
+}
+
+.appointment-confirm-green .label {
+  color: rgba(255,255,255,0.95);
+  font-weight: 600;
+}
+
+/* Toast styles */
+.confirmation-toast {
+  background: var(--success-color);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 8px 30px rgba(16,185,129,0.25);
+  font-weight: 600;
 }
 
 /* --- Helio Login Page Polish --- */

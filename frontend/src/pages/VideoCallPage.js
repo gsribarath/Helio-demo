@@ -16,6 +16,8 @@ import {
   FaComment,
   FaShareSquare
 } from 'react-icons/fa';
+import './VideoCallPage.css';
+import TransText from '../components/TransText';
 
 const VideoCallPage = () => {
   const { t } = useTranslation();
@@ -29,7 +31,7 @@ const VideoCallPage = () => {
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(true); // always true now, but kept for compatibility
   const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
@@ -44,30 +46,13 @@ const VideoCallPage = () => {
       setCallDuration(prev => prev + 1);
     }, 1000);
 
-    // Auto-hide controls after 3 seconds
-    const controlsTimer = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
-
     return () => {
       clearInterval(timer);
-      clearTimeout(controlsTimer);
     };
   }, [doctor, navigate]);
 
   // Show controls on mouse move
-  useEffect(() => {
-    const handleMouseMove = () => {
-      setShowControls(true);
-      const timer = setTimeout(() => {
-        setShowControls(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  // Controls are always visible (static) per new UX requirement.
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -80,11 +65,18 @@ const VideoCallPage = () => {
   };
 
   const toggleFullscreen = () => {
+    const stage = document.querySelector('.vc-video-stage');
+    if (!stage) return;
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
+      if (stage.requestFullscreen) {
+        stage.requestFullscreen();
+      } else if (stage.webkitRequestFullscreen) { /* Safari */
+        stage.webkitRequestFullscreen();
+      }
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen();
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       setIsFullscreen(false);
     }
   };
@@ -94,172 +86,100 @@ const VideoCallPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-900 flex flex-col">
-      {/* Main Video Area */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Doctor's Video (Main) */}
-        <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-          <div className="text-center text-white">
-            <div className="w-40 h-40 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-6xl font-bold">{doctor.name?.charAt(0)}</span>
+    <div className="vc-page">
+      <div className="vc-container">
+        <aside className="vc-sidebar">
+          <div className="vc-person vc-doctor">
+            <div className="vc-avatar vc-avatar-doctor">{doctor.name?.charAt(0)}</div>
+            <div className="vc-person-info">
+              <div className="vc-name"><TransText text={doctor.name} /></div>
+              <div className="vc-meta"><TransText text={doctor.specialty} /></div>
+              <div className="vc-small"><TransText text={doctor.qualifications} /></div>
             </div>
-            <h3 className="text-2xl font-semibold">{doctor.name}</h3>
-            <p className="text-gray-300 text-lg">{doctor.specialty}</p>
-            <p className="text-green-400 mt-2">Video Call Active</p>
           </div>
-        </div>
 
-        {/* Patient's Video (Picture-in-Picture) */}
-        <div className="absolute top-4 right-4 w-48 h-36 bg-gray-700 rounded-lg overflow-hidden border-2 border-white shadow-lg">
-          {isCameraOn ? (
-            <div className="w-full h-full bg-gray-600 flex items-center justify-center text-white">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-xl font-bold">You</span>
+          <div className="vc-divider" />
+
+          <div className="vc-person vc-patient">
+            <div className="vc-avatar vc-avatar-patient"><TransText text={t('you', 'You')} /></div>
+            <div className="vc-person-info">
+              <div className="vc-name">{t('patient')}</div>
+              <div className="vc-meta">{t('camera', 'Camera')}: {isCameraOn ? t('on', 'On') : t('off', 'Off')}</div>
+            </div>
+          </div>
+
+          <div className="vc-divider" />
+
+          <div className="vc-stats">
+            <div className="vc-timer">{formatTime(callDuration)}</div>
+            <div className="vc-status">{t('available')} • {doctor.experience || 0} yrs</div>
+            <div className="vc-langs">{t('languages')}: <TransText text={doctor.languages || 'English'} /></div>
+          </div>
+        </aside>
+
+        <main className="vc-main">
+          <header className="vc-main-header">
+            <h1>{t('video')} {t('call', 'Call')}</h1>
+            <div className="vc-actions">
+              <button onClick={toggleFullscreen} className="icon-btn" title={isFullscreen ? t('exit_fullscreen', 'Exit Fullscreen') : t('fullscreen', 'Fullscreen')}>
+                {isFullscreen ? <FaCompress /> : <FaExpand />}
+              </button>
+              <button onClick={() => setShowChat(!showChat)} className="icon-btn" title={t('toggle_chat', 'Toggle Chat')}><FaComment /></button>
+            </div>
+          </header>
+
+          <div className={`vc-video-stage ${showControls ? 'show-controls' : ''}`} onMouseMove={() => setShowControls(true)}>
+            <div className="vc-video-dummy">
+              <div className="vc-dummy-overlay">
+                <div className="vc-dummy-avatar">{doctor.name?.charAt(0)}</div>
+                <div className="vc-dummy-info">
+                  <div className="vc-dummy-name"><TransText text={doctor.name} /></div>
+                  <div className="vc-dummy-specialty"><TransText text={doctor.specialty} /></div>
+                  <div className="vc-dummy-status">{t('video')} {t('call', 'Call')} {t('active', 'Active')}</div>
                 </div>
-                <p className="text-sm">Camera On</p>
               </div>
             </div>
-          ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
-              <div className="text-center">
-                <FaVideoSlash className="text-2xl mb-2" />
-                <p className="text-sm">Camera Off</p>
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Top Controls */}
-        <div className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black/50 to-transparent p-4 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="flex items-center justify-between text-white">
-            <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-semibold">Video Call</h2>
-              <span className="bg-red-600 px-3 py-1 rounded-full text-sm font-medium">{formatTime(callDuration)}</span>
+            <div className="vc-mini-video">
+              {isCameraOn ? (
+                <div className="mini-on">
+                  <div className="mini-avatar"><TransText text={t('you', 'You')} /></div>
+                  <div className="mini-txt">{t('camera_on', 'Camera On')}</div>
+                </div>
+              ) : (
+                <div className="mini-off"><FaVideoSlash /> {t('camera_off', 'Camera Off')}</div>
+              )}
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={toggleFullscreen}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors"
-                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-              >
-                {isFullscreen ? <FaCompress className="text-xl" /> : <FaExpand className="text-xl" />}
+
+            <div className={`vc-controls ${showControls ? 'visible' : ''}`}>
+              <button className={`control-btn ${isMuted ? 'active muted' : ''}`} onClick={() => setIsMuted(!isMuted)} title={isMuted ? t('unmute', 'Unmute') : t('mute', 'Mute')}>
+                {isMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
               </button>
-              <button
-                onClick={() => setShowChat(!showChat)}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors"
-                title="Toggle Chat"
-              >
-                <FaComment className="text-xl" />
+
+              <button className={`control-btn ${!isCameraOn ? 'active muted' : ''}`} onClick={() => setIsCameraOn(!isCameraOn)} title={isCameraOn ? t('turn_camera_off', 'Turn camera off') : t('turn_camera_on', 'Turn camera on')}>
+                {isCameraOn ? <FaVideo /> : <FaVideoSlash />}
               </button>
+
+              <button className="control-btn end" onClick={handleEndCall} title={t('end_call', 'End Call')}><FaPhoneSlash /></button>
+
+              <button className={`control-btn ${!isSpeakerOn ? 'active muted' : ''}`} onClick={() => setIsSpeakerOn(!isSpeakerOn)} title={isSpeakerOn ? t('mute_speaker', 'Mute speaker') : t('unmute_speaker', 'Unmute speaker')}>
+                {isSpeakerOn ? <FaVolumeUp /> : <FaVolumeMute />}
+              </button>
+
+              <button className="control-btn" title={t('share_screen', 'Share screen')}><FaShareSquare /></button>
             </div>
           </div>
-        </div>
+        </main>
 
-        {/* Bottom Controls */}
-        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="flex items-center justify-center space-x-6">
-            {/* Microphone Toggle */}
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isMuted 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-gray-600/80 hover:bg-gray-700 backdrop-blur-sm'
-              }`}
-              title={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <FaMicrophoneSlash className="text-white text-xl" /> : <FaMicrophone className="text-white text-xl" />}
-            </button>
-
-            {/* Camera Toggle */}
-            <button
-              onClick={() => setIsCameraOn(!isCameraOn)}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
-                !isCameraOn 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-gray-600/80 hover:bg-gray-700 backdrop-blur-sm'
-              }`}
-              title={isCameraOn ? "Turn Camera Off" : "Turn Camera On"}
-            >
-              {isCameraOn ? <FaVideo className="text-white text-xl" /> : <FaVideoSlash className="text-white text-xl" />}
-            </button>
-
-            {/* End Call */}
-            <button
-              onClick={handleEndCall}
-              className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all duration-200 transform hover:scale-105"
-              title="End Call"
-            >
-              <FaPhoneSlash className="text-white text-2xl" />
-            </button>
-
-            {/* Speaker Toggle */}
-            <button
-              onClick={() => setIsSpeakerOn(!isSpeakerOn)}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 ${
-                !isSpeakerOn 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-gray-600/80 hover:bg-gray-700 backdrop-blur-sm'
-              }`}
-              title={isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}
-            >
-              {isSpeakerOn ? <FaVolumeUp className="text-white text-xl" /> : <FaVolumeMute className="text-white text-xl" />}
-            </button>
-
-            {/* Settings */}
-            <button
-              className="w-14 h-14 rounded-full bg-gray-600/80 hover:bg-gray-700 backdrop-blur-sm flex items-center justify-center transition-all duration-200"
-              title="Settings"
-            >
-              <FaCog className="text-white text-xl" />
-            </button>
-          </div>
-        </div>
-
-        {/* Chat Panel */}
         {showChat && (
-          <div className="absolute top-0 right-0 w-80 h-full bg-white shadow-2xl border-l border-gray-200 flex flex-col">
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">Chat</h3>
-                <button
-                  onClick={() => setShowChat(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <FaCompress />
-                </button>
-              </div>
+          <aside className="vc-chat">
+            <div className="chat-header">
+              <h3>{t('chat', 'Chat')}</h3>
+              <button className="icon-btn" onClick={() => setShowChat(false)}><FaCompress /></button>
             </div>
-            <div className="flex-1 p-4 overflow-y-auto">
-              <p className="text-gray-500 text-center">Chat feature coming soon...</p>
-            </div>
-          </div>
+            <div className="chat-body">{t('chat_coming_soon', 'Chat feature coming soon...')}</div>
+          </aside>
         )}
-      </div>
-
-      {/* Doctor Details Panel */}
-      <div className="bg-white border-t border-gray-200 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-              <FaUserMd className="text-white text-2xl" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold text-gray-900">{doctor.name}</h3>
-              <p className="text-gray-600">{doctor.specialty}</p>
-              <p className="text-sm text-gray-500">{doctor.qualifications}</p>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>Available</span>
-              </div>
-              <p className="text-sm text-gray-500 mt-1">{doctor.experience} years experience</p>
-              <p className="text-sm text-gray-500">Languages: {doctor.languages || 'Not specified'}</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

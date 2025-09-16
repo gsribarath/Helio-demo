@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import TransText from '../../components/TransText';
 import { useAuth } from '../../context/AuthContext';
 import { 
   FaSearch, 
@@ -219,16 +220,16 @@ const PatientMedicines = () => {
       });
 
       if (response.ok) {
-        alert(t('reservation_success', 'Medicine reserved successfully!'));
+  alert(t('reservation_success'));
         setShowReservationModal(false);
         fetchMedicines(); // Refresh data
       } else {
         const error = await response.json();
-        alert(error.message || t('reservation_failed', 'Failed to reserve medicine'));
+  alert(error.message || t('reservation_failed'));
       }
     } catch (error) {
       console.error('Error reserving medicine:', error);
-      alert(t('reservation_error', 'Error occurred while reserving medicine'));
+  alert(t('reservation_error'));
     }
   };
 
@@ -247,14 +248,14 @@ const PatientMedicines = () => {
       });
 
       if (response.ok) {
-        alert(t('rare_request_success', 'Rare medicine request submitted successfully!'));
+  alert(t('rare_request_success'));
       } else {
         const error = await response.json();
-        alert(error.message || t('rare_request_failed', 'Failed to submit rare medicine request'));
+  alert(error.message || t('rare_request_failed'));
       }
     } catch (error) {
       console.error('Error requesting rare medicine:', error);
-      alert(t('rare_request_error', 'Error occurred while requesting rare medicine'));
+  alert(t('rare_request_error'));
     }
   };
 
@@ -263,7 +264,7 @@ const PatientMedicines = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">{t('loading_medicines', 'Loading medicines...')}</p>
+          <p className="text-gray-600">{t('loading_medicines')}</p>
         </div>
       </div>
     );
@@ -275,7 +276,7 @@ const PatientMedicines = () => {
       <div className="bg-white shadow-sm">
         <div className="px-4 py-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            {t('find_medicines', 'Find Medicines')}
+            {t('find_medicines')}
           </h1>
           
           {/* Search Bar */}
@@ -285,7 +286,7 @@ const PatientMedicines = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t('search_medicines', 'Search medicines, brands, or manufacturers...')}
+              placeholder={t('search_medicines')}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -297,7 +298,7 @@ const PatientMedicines = () => {
               className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700"
             >
               <FaFilter className="mr-2" />
-              {t('filters', 'Filters')}
+              {t('filters')}
             </button>
             
             <div className="flex items-center space-x-2">
@@ -307,9 +308,9 @@ const PatientMedicines = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
-                <option value="name">{t('sort_name', 'Name')}</option>
-                <option value="price">{t('sort_price', 'Price')}</option>
-                <option value="availability">{t('sort_availability', 'Availability')}</option>
+                <option value="name">{t('name_asc')}</option>
+                <option value="price">{t('price_low_high')}</option>
+                <option value="availability">{t('stock_high_low')}</option>
               </select>
             </div>
           </div>
@@ -320,7 +321,7 @@ const PatientMedicines = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('category', 'Category')}
+                    {t('category')}
                   </label>
                   <select
                     value={selectedCategory}
@@ -329,7 +330,7 @@ const PatientMedicines = () => {
                   >
                     {categories.map(category => (
                       <option key={category} value={category === 'All' ? '' : category}>
-                        {t(category.toLowerCase().replace(' ', '_'), category)}
+                        {t(category.toLowerCase().replace(' ', '_'))}
                       </option>
                     ))}
                   </select>
@@ -344,7 +345,7 @@ const PatientMedicines = () => {
                     className="mr-2"
                   />
                   <label htmlFor="available-only" className="text-sm text-gray-700">
-                    {t('show_available_only', 'Show available only')}
+                    {t('show_available_only')}
                   </label>
                 </div>
               </div>
@@ -356,7 +357,7 @@ const PatientMedicines = () => {
       {/* Results */}
       <div className="px-4 py-4">
         <p className="text-gray-600 mb-4">
-          {t('found_medicines', 'Found {{count}} medicines', { count: filteredMedicines.length })}
+          {t('found_medicines', { count: filteredMedicines.length })}
         </p>
 
         <div className="space-y-4">
@@ -365,19 +366,19 @@ const PatientMedicines = () => {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800 text-lg">
-                    {medicine.name}
+                    <TransText text={medicine.name} />
                   </h3>
                   <p className="text-gray-600 text-sm">
-                    {medicine.generic_name} • {medicine.manufacturer}
+                    <TransText text={`${medicine.generic_name} • ${medicine.manufacturer}`} />
                   </p>
                   <p className="text-gray-500 text-xs mt-1">
-                    {medicine.description}
+                    <TransText text={medicine.description} />
                   </p>
                 </div>
                 
                 {medicine.requires_prescription && (
                   <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
-                    {t('prescription_required', 'Prescription Required')}
+                    {t('prescription_required')}
                   </span>
                 )}
               </div>
@@ -386,7 +387,7 @@ const PatientMedicines = () => {
               {medicine.pharmacy_locations.length > 0 ? (
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-700">
-                    {t('available_at', 'Available at')}:
+                    {t('available_at')}:
                   </h4>
                   {medicine.pharmacy_locations.map((pharmacy, index) => {
                     const StatusIcon = getStockIcon(pharmacy.stock_status);
@@ -395,11 +396,11 @@ const PatientMedicines = () => {
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">
                             <h5 className="font-medium text-gray-800">
-                              {pharmacy.pharmacy_name}
+                              <TransText text={pharmacy.pharmacy_name} />
                             </h5>
                             <div className="flex items-center text-gray-600 text-sm mt-1">
                               <FaMapMarkerAlt className="mr-1" />
-                              {pharmacy.address}
+                              <TransText text={pharmacy.address} />
                             </div>
                           </div>
                           <div className="text-right">
@@ -407,7 +408,7 @@ const PatientMedicines = () => {
                               ₹{pharmacy.price}
                             </p>
                             <p className="text-gray-500 text-xs">
-                              {t('expires', 'Expires')}: {pharmacy.expiry_date}
+                              {t('expires')}: {pharmacy.expiry_date}
                             </p>
                           </div>
                         </div>
@@ -416,7 +417,7 @@ const PatientMedicines = () => {
                           <div className="flex items-center space-x-3">
                             <span className={`flex items-center px-2 py-1 rounded-full text-xs ${getStockStatusColor(pharmacy.stock_status)}`}>
                               <StatusIcon className="mr-1" />
-                              {pharmacy.stock_status} ({pharmacy.quantity})
+                              {t(pharmacy.stock_status.toLowerCase().replace(/ /g,'_'))} ({pharmacy.quantity})
                             </span>
                           </div>
 
@@ -426,7 +427,7 @@ const PatientMedicines = () => {
                               className="flex items-center px-3 py-1 border border-gray-300 rounded-lg text-gray-700 text-sm"
                             >
                               <FaPhone className="mr-1" />
-                              {t('call', 'Call')}
+                              {t('call')}
                             </button>
                             
                             {pharmacy.quantity > 0 && (
@@ -435,7 +436,7 @@ const PatientMedicines = () => {
                                 className="flex items-center px-3 py-1 bg-blue-500 text-white rounded-lg text-sm"
                               >
                                 <FaBookmark className="mr-1" />
-                                {t('reserve', 'Reserve')}
+                                {t('reserve')}
                               </button>
                             )}
                           </div>
@@ -448,13 +449,13 @@ const PatientMedicines = () => {
                 <div className="text-center py-4">
                   <FaTimesCircle className="text-red-500 text-2xl mx-auto mb-2" />
                   <p className="text-gray-600 mb-3">
-                    {t('not_available', 'Not available in nearby pharmacies')}
+                    {t('not_available')}
                   </p>
                   <button
                     onClick={() => requestRareMedicine(medicine)}
                     className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm"
                   >
-                    {t('request_rare', 'Request as Rare Medicine')}
+                    {t('request_rare')}
                   </button>
                 </div>
               )}
@@ -466,7 +467,7 @@ const PatientMedicines = () => {
           <div className="text-center py-8">
             <FaSearch className="text-gray-400 text-4xl mx-auto mb-4" />
             <p className="text-gray-600">
-              {t('no_medicines_found', 'No medicines found matching your criteria')}
+              {t('no_medicines_found')}
             </p>
           </div>
         )}
@@ -477,18 +478,18 @@ const PatientMedicines = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold mb-4">
-              {t('reserve_medicine', 'Reserve Medicine')}
+              {t('reserve_medicine')}
             </h3>
             
             <div className="mb-4">
-              <p className="font-medium">{selectedMedicine?.name}</p>
-              <p className="text-sm text-gray-600">{selectedPharmacy?.pharmacy_name}</p>
+              <p className="font-medium"><TransText text={selectedMedicine?.name || ''} /></p>
+              <p className="text-sm text-gray-600"><TransText text={selectedPharmacy?.pharmacy_name || ''} /></p>
               <p className="text-sm text-gray-600">₹{selectedPharmacy?.price} per unit</p>
             </div>
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('quantity', 'Quantity')}
+                {t('quantity')}
               </label>
               <input
                 type="number"
@@ -499,13 +500,13 @@ const PatientMedicines = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               />
               <p className="text-xs text-gray-500 mt-1">
-                {t('max_available', 'Max available')}: {selectedPharmacy?.quantity}
+                {t('max_available')}: {selectedPharmacy?.quantity}
               </p>
             </div>
 
             <div className="mb-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm font-medium text-blue-800">
-                {t('total_cost', 'Total Cost')}: ₹{(selectedPharmacy?.price * reservationQuantity).toFixed(2)}
+                {t('total_cost')}: ₹{(selectedPharmacy?.price * reservationQuantity).toFixed(2)}
               </p>
             </div>
 
@@ -514,13 +515,13 @@ const PatientMedicines = () => {
                 onClick={() => setShowReservationModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700"
               >
-                {t('cancel', 'Cancel')}
+                {t('cancel')}
               </button>
               <button
                 onClick={confirmReservation}
                 className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg"
               >
-                {t('confirm_reservation', 'Confirm Reservation')}
+                {t('confirm_reservation')}
               </button>
             </div>
           </div>
