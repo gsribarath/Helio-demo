@@ -106,7 +106,7 @@ const Profile = () => {
     <div className="min-h-screen bg-bg-secondary">
       {/* Header - Matching Home Page Style */}
       <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12">
-        <div className="container mx-auto px-6 text-center">
+        <div className="container-left-flush text-left" style={{paddingLeft: 0}}>
           <h1 className="text-4xl font-black mb-4 tracking-tight">
             {t('patient')} <span className="text-primary-light">{t('profile')}</span>
           </h1>
@@ -119,8 +119,8 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8 pb-40">
-        <div className="max-w-7xl mx-auto" style={{gap: '0.1cm'}}>
+      <div className="container-left-flush py-8 pb-40" style={{paddingLeft: 0, paddingRight: 0}}>
+  <div className="w-full" style={{gap: '0.1cm', marginLeft: 0}}>
           
           {/* Personal Information Card - Clean Layout */}
           <div className="card-elevated" style={{marginBottom: '0.1cm'}}>

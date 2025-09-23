@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { doctorAPI } from '../services/api';
@@ -39,6 +39,9 @@ const Home = () => {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [showConsultModal, setShowConsultModal] = useState(false);
   const [selectedDoctorForCall, setSelectedDoctorForCall] = useState(null);
+  // Track which doctors have accepted (status in_progress) appointments for this patient
+  const PATIENT_NAME = 'Gurpreet Singh'; // demo assumption
+  const [acceptedDoctorIds, setAcceptedDoctorIds] = useState(new Set());
 
   // Dummy data for demonstration
   const dummyDoctors = [
@@ -99,6 +102,75 @@ const Home = () => {
   useEffect(() => {
     fetchDoctors();
   }, []);
+
+  const loadAcceptedAppointments = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('helio_appointments');
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return;
+      const accepted = parsed.filter(a => a.patientName === PATIENT_NAME && a.status === 'in_progress');
+      const ids = new Set(accepted.map(a => a.doctorId || a.doctor?.id || a.doctorId));
+      setAcceptedDoctorIds(ids);
+    } catch (e) {
+      console.error('Failed to load accepted appointments:', e);
+    }
+  }, []);
+
+  // Initial load and listeners for real-time enabling
+  useEffect(() => {
+    loadAcceptedAppointments();
+    const onStorage = (e) => {
+      if (e.key === 'helio_appointments') {
+        loadAcceptedAppointments();
+        checkIncomingCall();
+      }
+    };
+    const onFocus = () => loadAcceptedAppointments();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [loadAcceptedAppointments]);
+
+  // Track last handled call to avoid duplicate redirects
+  const handledCallIdsRef = React.useRef(new Set());
+
+  const checkIncomingCall = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('helio_appointments');
+      const arr = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(arr)) return;
+      // Find an appointment for this patient that has callType & callSessionId
+      const incoming = arr.find(a => a.patientName === PATIENT_NAME && a.callType && a.callSessionId);
+      if (incoming && incoming.callSessionId && !handledCallIdsRef.current.has(incoming.callSessionId)) {
+        handledCallIdsRef.current.add(incoming.callSessionId);
+        const doctorObj = {
+          id: incoming.doctorId || '1',
+          name: incoming.doctor || 'Doctor',
+          specialty: incoming.specialist || 'General Medicine',
+          qualifications: 'MBBS',
+          languages: 'English, Hindi, Punjabi',
+          experience: 12
+        };
+        const patientObj = { id: incoming.patientId || incoming.id, name: incoming.patientName };
+        if (incoming.callType === 'video') {
+          navigate('/video-call', { state: { doctor: doctorObj, patient: patientObj, callType:'video', callSessionId: incoming.callSessionId } });
+        } else if (incoming.callType === 'audio') {
+          navigate('/audio-call', { state: { doctor: doctorObj, patient: patientObj, callType:'audio', callSessionId: incoming.callSessionId } });
+        }
+      } else if (incoming && !incoming.callSessionId) {
+        // Session cleared; reset handled IDs to allow future calls
+        handledCallIdsRef.current = new Set();
+      }
+    } catch (e) {
+      console.error('Failed to check incoming call:', e);
+    }
+  }, [navigate]);
+
+  // Initial call check
+  useEffect(() => { checkIncomingCall(); }, [checkIncomingCall]);
 
   const fetchDoctors = async () => {
     try {
@@ -322,13 +394,13 @@ const Home = () => {
                     {/* Video Call */}
                     <button
                       onClick={() => {
+                        if (!acceptedDoctorIds.has(doctor.id)) return; // guard
                         navigate('/video-call', { state: { doctor } });
                       }}
-                      disabled={!doctor.is_available}
-                      className={`btn btn-success py-2 px-3 text-sm ${
-                        doctor.is_available ? '' : 'opacity-60 cursor-not-allowed'
-                      }`}
-                      aria-label={`${t('consult_now')} ${doctor.name} ${t('video').toLowerCase()}`}
+                      disabled={!acceptedDoctorIds.has(doctor.id)}
+                      title={acceptedDoctorIds.has(doctor.id) ? t('start_video_call', 'Start Video Call') : t('waiting_for_doctor', 'Waiting for doctor acceptance')}
+                      className={`btn btn-success py-2 px-3 text-sm ${acceptedDoctorIds.has(doctor.id) ? '' : 'opacity-60 cursor-not-allowed'}`}
+                      aria-label={acceptedDoctorIds.has(doctor.id) ? `${t('video')} ${t('enabled','enabled')}` : `${t('video')} ${t('waiting','waiting')}`}
                     >
                       <FaVideo className="text-xs" />
                       {t('video')}
@@ -337,13 +409,13 @@ const Home = () => {
                     {/* Audio Call */}
                     <button
                       onClick={() => {
+                        if (!acceptedDoctorIds.has(doctor.id)) return;
                         navigate('/audio-call', { state: { doctor } });
                       }}
-                      disabled={!doctor.is_available}
-                      className={`btn btn-secondary py-2 px-3 text-sm ${
-                        doctor.is_available ? '' : 'opacity-60 cursor-not-allowed'
-                      }`}
-                      aria-label={`${t('consult_now')} ${doctor.name} ${t('audio').toLowerCase()}`}
+                      disabled={!acceptedDoctorIds.has(doctor.id)}
+                      title={acceptedDoctorIds.has(doctor.id) ? t('start_audio_call', 'Start Audio Call') : t('waiting_for_doctor', 'Waiting for doctor acceptance')}
+                      className={`btn btn-secondary py-2 px-3 text-sm ${acceptedDoctorIds.has(doctor.id) ? '' : 'opacity-60 cursor-not-allowed'}`}
+                      aria-label={acceptedDoctorIds.has(doctor.id) ? `${t('audio')} ${t('enabled','enabled')}` : `${t('audio')} ${t('waiting','waiting')}`}
                     >
                       <FaPhone className="text-xs" />
                       {t('audio')}

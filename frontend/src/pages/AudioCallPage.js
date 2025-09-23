@@ -19,7 +19,8 @@ const AudioCallPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const doctor = location.state?.doctor;
+  const { doctor, patient, callType, callSessionId, appointmentId } = location.state || {};
+  const [phase, setPhase] = useState('ringing'); // ringing | active | ended | declined
 
   // Call states
   const [callDuration, setCallDuration] = useState(0);
@@ -30,35 +31,26 @@ const AudioCallPage = () => {
   // fullscreen state is managed via DOM fullscreen API; no local flag needed
 
   useEffect(() => {
-    // Redirect if no doctor data
-    if (!doctor) {
-      navigate('/');
-      return;
-    }
-
-    // Simulate call connection after 3 seconds of ringing
-    const connectionTimer = setTimeout(() => {
-      if (callStatus === 'ringing') {
-        setCallStatus('connected');
-      }
-    }, 3000);
-
-    return () => clearTimeout(connectionTimer);
-  }, [doctor, navigate, callStatus]);
+    if (!doctor || !patient) { navigate('/'); return; }
+    const autoTimer = setTimeout(()=> { setPhase('active'); setCallStatus('connected'); }, 1500);
+    return ()=> clearTimeout(autoTimer);
+  }, [doctor, patient, navigate]);
 
   useEffect(() => {
-    // Start call timer when connected
-    let timer;
-    if (callStatus === 'connected' && isCallActive) {
-      timer = setInterval(() => {
-        setCallDuration(prev => prev + 1);
-      }, 1000);
-    }
+    if (phase !== 'active' || !isCallActive) return;
+    const timer = setInterval(()=> setCallDuration(p=>p+1),1000);
+    return ()=> clearInterval(timer);
+  }, [phase, isCallActive]);
 
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [callStatus, isCallActive]);
+  const cleanupSession = () => {
+    try {
+      if (!appointmentId) return;
+      const key='helio_appointments';
+      const arr = JSON.parse(localStorage.getItem(key)||'[]');
+      const updated = arr.map(a=> a.id===appointmentId ? { ...a, callType:null, callSessionId:null } : a);
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch(e){ console.error('Failed to cleanup call session (audio)', e); }
+  };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -69,11 +61,9 @@ const AudioCallPage = () => {
   const handleEndCall = () => {
     setCallStatus('ended');
     setIsCallActive(false);
-    
-    // Show call ended for 2 seconds then navigate back
-    setTimeout(() => {
-      navigate('/');
-    }, 2000);
+    setPhase('ended');
+    cleanupSession();
+    setTimeout(()=> navigate('/'), 1200);
   };
 
   const toggleFullscreen = () => {
@@ -119,7 +109,7 @@ const AudioCallPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col" style={{paddingBottom:'120px'}}>
       {/* Status Bar Area */}
       <div className="h-8 bg-transparent"></div>
 
@@ -166,8 +156,9 @@ const AudioCallPage = () => {
           </div>
         </div>
 
-        {/* Controls bar (fixed, always visible) */}
-        <div className="vc-controls" role="toolbar" aria-label={t('call_controls', 'call controls')}>
+        {/* Controls bar only when active */}
+        {phase === 'active' && (
+        <div className="vc-controls" role="toolbar" aria-label={t('call_controls', 'call controls')} style={{bottom:'110px',position:'fixed',left:'50%',transform:'translateX(-50%)'}}>
           <button
             onClick={() => setIsMuted(!isMuted)}
             disabled={callStatus !== 'connected'}
@@ -199,6 +190,7 @@ const AudioCallPage = () => {
             <FaPhone />
           </button>
         </div>
+        )}
 
         {/* Visual Call Waves (when connected) */}
         {callStatus === 'connected' && !isMuted && (
@@ -221,6 +213,19 @@ const AudioCallPage = () => {
         {/* Doctor details panel removed - now using centered card `.vc-audio-card` above for a single professional layout during call */}
 
       {/* Emergency Info (when call ends) */}
+      {phase === 'ringing' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-xl p-6 shadow-xl w-full max-w-sm text-center">
+            <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">{doctor.name?.charAt(0)}</div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Incoming Audio Call</h2>
+            <p className="text-sm text-gray-600 mb-4">Connecting you with <strong>{doctor.name}</strong>...</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={()=>{ setPhase('active'); setCallStatus('connected'); }} className="btn btn-success px-4 py-2 text-sm">Accept</button>
+              <button onClick={()=>{ setPhase('declined'); cleanupSession(); setTimeout(()=>navigate('/'),800); }} className="btn btn-secondary px-4 py-2 text-sm">Decline</button>
+            </div>
+          </div>
+        </div>
+      )}
       {callStatus === 'ended' && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 mx-6 text-center shadow-2xl">

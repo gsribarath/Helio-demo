@@ -13,14 +13,14 @@ const Login = ({ onLogin }) => {
   const [error, setError] = useState('');
 
   const roles = [
-    // Order: Patient first, then Doctor, then Pharmacist
     {
       id: 'patient',
       icon: FaUser,
       name: t('patient') || 'Patient',
       gradient: 'from-rose-500 to-orange-400',
       usernamePrefix: 'p',
-      sampleUsername: 'p001'
+      sampleUsername: 'p001',
+      solidColor: '#FF4F5F'
     },
     {
       id: 'doctor',
@@ -175,23 +175,30 @@ const Login = ({ onLogin }) => {
               <div className="role-list" style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
                 {roles.map((role) => {
                   const Icon = role.icon;
-                  // Inline mapping to ensure Tailwind picks up gradient classes
                   const variant = role.id === 'patient' ? 'role-patient' : role.id === 'doctor' ? 'role-doctor' : 'role-pharmacist';
+                  const baseStyle = role.id === 'patient'
+                    ? { background: role.solidColor, border:'2px solid #FF4F5F', color:'#ffffff', boxShadow:'0 4px 12px rgba(255,79,95,0.35)' }
+                    : {};
+                  const hoverStyle = role.id === 'patient' ? { filter:'brightness(0.92)' } : {};
                   return (
                     <button
                       key={role.id}
                       onClick={() => handleRoleSelect(role.id)}
                       className={`role-btn ${variant}`}
                       aria-label={`Select ${role.name}`}
+                      style={baseStyle}
+                      onMouseEnter={e=>{ if(role.id==='patient'){ Object.assign(e.currentTarget.style, hoverStyle);} }}
+                      onMouseLeave={e=>{ if(role.id==='patient'){ Object.assign(e.currentTarget.style, baseStyle);} }}
+                      onFocus={e=>{ if(role.id==='patient'){ e.currentTarget.style.outline='3px solid rgba(255,79,95,0.4)'; } }}
+                      onBlur={e=>{ if(role.id==='patient'){ e.currentTarget.style.outline='none'; } }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="left">
-                          <div className="icon-badge">
+                          <div className="icon-badge" style={ role.id === 'patient' ? { background:'rgba(255,255,255,0.15)', color:'#fff' } : {} }>
                             <Icon />
                           </div>
-                          <span className="role-label">{role.name}</span>
+                          <span className="role-label" style={ role.id === 'patient' ? { color:'#fff', fontWeight:700 } : {} }>{role.name}</span>
                         </div>
-                        {/* Chevron removed as requested */}
                       </div>
                     </button>
                   );

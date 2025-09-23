@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { appointmentAPI } from '../services/api';
 import { 
   FaUser, 
@@ -15,6 +16,7 @@ import {
 const Appointments = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const { user } = useAuth();
   const selectedDoctor = location.state?.selectedDoctor;
   
   // Form state
@@ -101,6 +103,7 @@ const Appointments = () => {
         const newAppointment = {
           id,
           patientName: formData.patientName,
+          patientId: user?.username || 'p001', // Store the patient ID from auth context
           age: formData.age,
           healthIssue: formData.healthIssue,
           specialist: formData.specialist,

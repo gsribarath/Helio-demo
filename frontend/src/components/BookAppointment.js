@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 import { appointmentAPI } from '../services/api';
 import { FaTimes } from 'react-icons/fa';
 
 const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -25,6 +27,17 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
   if (!isOpen) {
     return null;
   }
+
+  // Scroll to top on modal open
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+    }
+  }, [isOpen]);
 
   // Specialist options
   const specialists = [
@@ -88,6 +101,32 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
       const id = response.data.appointment_id || 'APT' + Date.now().toString().slice(-6);
       setAppointmentId(id);
       
+      // Store appointment locally with patient ID
+      try {
+        const storageKey = 'helio_appointments';
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const newAppointment = {
+          id,
+          patientName: formData.patientName,
+          patientId: user?.username || 'p001', // Store the patient ID from auth context
+          age: formData.age,
+          healthIssue: formData.healthIssue,
+          specialist: formData.specialist,
+          date: formData.preferredDate,
+          time: formData.preferredTime,
+          hospitalName: formData.hospitalName,
+          doctor: doctor?.name || null,
+          doctorId: doctor?.id || null,
+          status: 'upcoming',
+          durationMinutes: 30, // default duration for auto-complete logic
+          createdAt: new Date().toISOString()
+        };
+        existing.push(newAppointment);
+        localStorage.setItem(storageKey, JSON.stringify(existing));
+      } catch (err) {
+        console.error('Failed to store appointment locally:', err);
+      }
+      
       // Show confirmation
       setShowConfirmation(true);
       
@@ -96,6 +135,7 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
         onSubmit({
           ...formData,
           doctorId: doctor?.id,
+          patientId: user?.username || 'p001',
           appointmentId: id,
           status: 'confirmed'
         });

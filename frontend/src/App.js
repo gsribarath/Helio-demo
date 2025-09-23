@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Navbar from './components/Navbar';
 import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages
 import Home from './pages/Home';
@@ -17,6 +18,20 @@ import VideoCallPage from './pages/VideoCallPage';
 import AudioCallPage from './pages/AudioCallPage';
 import Reports from './pages/Reports';
 import MyAppointments from './pages/MyAppointments';
+import DoctorHome from './pages/doctor/DoctorHome';
+import DoctorMyAppointments from './pages/doctor/DoctorMyAppointments';
+import DoctorProfile from './pages/doctor/DoctorProfile';
+import DoctorSettings from './pages/doctor/DoctorSettings';
+import DoctorBottomNavigation from './components/DoctorBottomNavigation';
+// Pharmacy components
+import PharmacySidebar from './components/pharmacy/PharmacySidebar';
+import PharmacyHome from './pages/pharmacy/PharmacyHome';
+import Inventory from './pages/pharmacy/Inventory';
+import Orders from './pages/pharmacy/Orders';
+import PharmacyReports from './pages/pharmacy/PharmacyReports';
+import DoctorPatientInfo from './pages/doctor/DoctorPatientInfo';
+import DoctorPatients from './pages/doctor/DoctorPatients';
+import DoctorConsultation from './pages/doctor/DoctorConsultation';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -83,9 +98,7 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
-  // Pages that should not show navigation
-  const fullScreenPages = ['/video-call', '/audio-call'];
-  const isFullScreenPage = fullScreenPages.includes(location.pathname);
+  // Navigation now always shown; previously hid for full screen call pages.
 
   // Role-based dashboard routing
   const getRoleBasedRoutes = () => {
@@ -110,19 +123,31 @@ function App() {
         </Routes>
       );
     } else if (user.role === 'doctor') {
-      // Doctor dashboard routes (to be implemented)
+      // Return only routes; outer layout will handle persistent nav
       return (
         <Routes>
-          <Route path="/" element={<div className="p-6"><h1 className="text-2xl font-bold">{t('doctor_dashboard')}</h1><p>{t('welcome_doctor', { name: user.profile?.first_name || user.username })}</p><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">{t('logout')}</button></div>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<DoctorHome />} />
+          <Route path="/doctor" element={<DoctorHome />} />
+          <Route path="/doctor/patients" element={<DoctorPatients />} />
+          <Route path="/doctor/my-appointments" element={<DoctorMyAppointments />} />
+          <Route path="/doctor/profile" element={<DoctorProfile />} />
+          <Route path="/doctor/settings" element={<DoctorSettings />} />
+          <Route path="/doctor/patient/:id" element={<DoctorPatientInfo />} />
+          <Route path="/doctor/consult/:id" element={<DoctorConsultation />} />
+          <Route path="/video-call" element={<VideoCallPage />} />
+          <Route path="/audio-call" element={<AudioCallPage />} />
+          <Route path="*" element={<Navigate to="/doctor" replace />} />
         </Routes>
       );
     } else if (user.role === 'pharmacist') {
-      // Pharmacist dashboard routes (to be implemented)
+      // Pharmacist dashboard routes
       return (
         <Routes>
-          <Route path="/" element={<div className="p-6"><h1 className="text-2xl font-bold">{t('pharmacy_dashboard')}</h1><p>{t('welcome_pharmacy', { name: user.profile?.pharmacy_name || user.username })}</p><button onClick={handleLogout} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">{t('logout')}</button></div>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<PharmacyHome />} />
+          <Route path="/pharmacy" element={<PharmacyHome />} />
+          <Route path="/pharmacy/inventory" element={<Inventory />} />
+          <Route path="/pharmacy/orders" element={<Orders />} />
+          <Route path="*" element={<Navigate to="/pharmacy" replace />} />
         </Routes>
       );
     }
@@ -134,15 +159,6 @@ function App() {
       </Routes>
     );
   };
-
-  // Full screen pages (like video call) - no navigation
-  if (isFullScreenPage) {
-    return (
-      <div className="App min-h-screen">
-        {getRoleBasedRoutes()}
-      </div>
-    );
-  }
 
   // For patients, show the existing interface with navigation
   if (user.role === 'patient') {
@@ -160,6 +176,7 @@ function App() {
               minHeight: 'calc(100vh - 144px)' // ensure content takes full height minus header and footer
             }}
           >
+            <ScrollToTop />
             {getRoleBasedRoutes()}
           </main>
           {/* Global spacer to prevent overlap with fixed bottom nav */}
@@ -173,10 +190,50 @@ function App() {
     );
   }
 
-  // For doctors and pharmacists, show simple dashboard without patient navigation
+  // For doctors show persistent doctor nav; for pharmacists show sidebar layout consistent with theme
   return (
     <div className="App min-h-screen bg-gray-50">
-      {getRoleBasedRoutes()}
+      {user.role === 'doctor' ? (
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          <Navbar user={user} onLogout={handleLogout} />
+          <main
+            className="flex-1"
+            style={{
+              paddingTop: '64px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
+              minHeight: 'calc(100vh - 144px)'
+            }}
+          >
+            <ScrollToTop />
+            {getRoleBasedRoutes()}
+          </main>
+          <div aria-hidden="true" style={{ height: 'calc(88px + env(safe-area-inset-bottom, 0px))' }} />
+          <DoctorBottomNavigation />
+        </div>
+      ) : user.role === 'pharmacist' ? (
+        <div className="flex flex-col min-h-screen bg-gray-50">
+          <Navbar user={user} onLogout={handleLogout} />
+          <main
+            className="flex-1"
+            style={{
+              paddingTop: '64px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
+              minHeight: 'calc(100vh - 144px)'
+            }}
+          >
+            <ScrollToTop />
+            {getRoleBasedRoutes()}
+          </main>
+          <div aria-hidden="true" style={{ height: 'calc(88px + env(safe-area-inset-bottom, 0px))' }} />
+          {React.createElement(require('./components/PharmacyBottomNavigation').default)}
+        </div>
+      ) : (
+        getRoleBasedRoutes()
+      )}
     </div>
   );
 }

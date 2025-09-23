@@ -37,7 +37,9 @@ const BottomNavigation = () => {
         left: 0,
         right: 0,
         zIndex: 9999,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        transform: 'translateZ(0)',
+        willChange: 'auto'
       }}
       role="navigation"
       aria-label="Bottom navigation"
@@ -69,6 +71,7 @@ const BottomNavigation = () => {
                 background: 'transparent'
               }}
               aria-label={`Navigate to ${item.label}`}
+              aria-current={isActive ? 'page' : undefined}
             >
               <div
                 className="flex items-center justify-center"

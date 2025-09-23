@@ -25,7 +25,32 @@ const PatientHome = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    loadNotifications(); // Load notifications on component mount
   }, []);
+
+  const loadNotifications = () => {
+    try {
+      const allNotifications = JSON.parse(localStorage.getItem('helio_notifications') || '[]');
+      const currentPatientId = user?.username || 'p001';
+      // Filter notifications for current patient
+      const patientNotifications = allNotifications.filter(n => n.patientId === currentPatientId);
+      setNotifications(patientNotifications);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  // Listen for storage changes to update notifications in real-time
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'helio_notifications') {
+        loadNotifications();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user]);
 
   const fetchDashboardData = async () => {
     try {
@@ -78,6 +103,15 @@ const PatientHome = () => {
   };
 
   const quickActionCards = [
+    {
+      id: 'my-appointments',
+      title: t('my_appointments', 'My Appointments'),
+      subtitle: t('view_your_appointments', 'View your scheduled appointments'),
+      icon: FaCalendarAlt,
+      color: 'bg-indigo-500',
+      route: '/my-appointments',
+      hasNotification: notifications.filter(n => !n.read && n.type === 'appointment_accepted').length > 0
+    },
     {
       id: 'book-appointment',
       title: t('book_appointment', 'Book Appointment'),
@@ -208,9 +242,15 @@ const PatientHome = () => {
             return (
               <div
                 key={action.id}
-                className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative"
                 onClick={() => window.location.href = action.route}
               >
+                {/* Notification Badge */}
+                {action.hasNotification && (
+                  <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg">
+                    1
+                  </div>
+                )}
                 <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3`}>
                   <IconComponent className="text-white text-xl" />
                 </div>
