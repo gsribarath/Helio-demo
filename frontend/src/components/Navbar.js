@@ -4,11 +4,15 @@ import { FiLogOut } from 'react-icons/fi';
 
 // Minimal, clean header: App name on the left, Logout button on the right
 const Navbar = ({ user, onLogout }) => {
+  // Converted to a regular non-fixed header per latest requirement:
+  //  - It now sits at the top of the document flow and scrolls away when the user scrolls down.
+  //  - All previous defensive fixed-position logic has been removed.
+  //  - Any layout padding compensating for a fixed header has also been removed in App.js.
   const { t } = useTranslation();
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200"
-      style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+      className="w-full bg-white border-b border-gray-200"
+      style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.04)', position: 'relative', zIndex: 10 }}
       role="navigation"
       aria-label="Top navigation"
     >

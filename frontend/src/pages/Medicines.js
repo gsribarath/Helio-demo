@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import TransText from '../components/TransText';
 
@@ -8,11 +8,7 @@ const Medicines = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [prescriptions, setPrescriptions] = useState([]); // flattened patient prescriptions for display
-  // TODO: Replace hardcoded patient identity with authenticated user context when available
-  const PATIENT_ID = 'patient-demo-1';
-  const PATIENT_NAME = 'Gurpreet Singh';
-  const [showMyMedicines, setShowMyMedicines] = useState(false);
+  // Removed embedded "My Medicines" popup panel per new requirement.
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [showPharmacyModal, setShowPharmacyModal] = useState(false);
 
@@ -133,36 +129,7 @@ const Medicines = () => {
     { name: 'Care & Cure Pharmacy', address: 'Nabha Village' }
   ];
 
-  useEffect(() => {
-    fetchMedicines();
-    loadPrescriptions();
-    const onStorage = (e) => {
-      if(e.key === 'helio_prescriptions') loadPrescriptions();
-    };
-    window.addEventListener('storage', onStorage);
-    return ()=> window.removeEventListener('storage', onStorage);
-  }, []);
-
-  const loadPrescriptions = () => {
-    try {
-      const raw = localStorage.getItem('helio_prescriptions');
-      if(!raw){ setPrescriptions([]); return; }
-      const arr = JSON.parse(raw);
-      if(Array.isArray(arr)){
-        const mine = arr.filter(r => r.patientId === PATIENT_ID || r.patientName === PATIENT_NAME);
-        // Flatten medicines into display list with record metadata
-        const flat = mine.flatMap(rec => (rec.medicines||[]).map(m => ({
-          rxId: rec.id,
-          name: m.name,
-          dosage: m.dosage || m.dose || '-',
-          frequency: m.frequency || '—',
-          duration: m.duration || (m.days? m.days + ' days':'—'),
-          createdAt: rec.createdAt
-        })));
-        setPrescriptions(flat);
-      } else setPrescriptions([]);
-    } catch(e){ console.error('Failed to load prescriptions', e); setPrescriptions([]); }
-  };
+  useEffect(() => { fetchMedicines(); }, []);
 
   const fetchMedicines = async () => {
     try {
@@ -267,46 +234,11 @@ const Medicines = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8 pb-40">
-        {/* My Medicines toggle button */}
-        <div className="flex flex-col items-center mb-10">
-          <button
-            type="button"
-            onClick={()=> setShowMyMedicines(v=>!v)}
-            className="my-appointments-btn w-full sm:w-auto max-w-xs mb-4"
-            aria-expanded={showMyMedicines}
-            aria-controls="my-medicines-panel"
-          >
-            My Medicines {showMyMedicines ? '▲' : '▼'}
-          </button>
-          {showMyMedicines && (
-            <div id="my-medicines-panel" className="w-full max-w-5xl animate-fade-in">
-              <div className="card-elevated mb-2">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-text-primary m-0">My Medicines</h2>
-                  <div className="text-xs text-text-secondary font-medium">{prescriptions.length} item{prescriptions.length!==1?'s':''}</div>
-                </div>
-                {prescriptions.length === 0 && (
-                  <div className="text-text-secondary text-sm">No prescribed medicines yet.</div>
-                )}
-                {prescriptions.length > 0 && (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-80 overflow-auto pr-1" role="list" aria-label="Prescribed medicines list">
-                    {prescriptions.map((p,i)=>(
-                      <div key={i} className="border border-border-light rounded-xl p-3 bg-white shadow-sm flex flex-col">
-                        <div className="font-semibold text-text-primary mb-1 leading-snug" title={p.name}>{p.name}</div>
-                        <div className="text-[11px] text-text-secondary space-y-1">
-                          <div><span className="font-medium text-text-primary">Dosage:</span> {p.dosage}</div>
-                          <div><span className="font-medium text-text-primary">Frequency:</span> {p.frequency}</div>
-                          <div><span className="font-medium text-text-primary">Duration:</span> {p.duration}</div>
-                          <div className="text-[10px] mt-1 opacity-70">{new Date(p.createdAt).toLocaleString()}</div>
-                          <div className="text-[10px] opacity-60">Rx: {p.rxId}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+        {/* My Medicines full-page redirect button */}
+        <div className="flex justify-center mb-10">
+          <a href="/my-medicines" className="my-appointments-btn w-full sm:w-auto max-w-xs text-center" title="View all prescribed medicines">
+            My Medicines
+          </a>
         </div>
   {/* Search only (text-only, no icons) */}
         <div className="card-elevated mb-6 max-w-3xl mx-auto">

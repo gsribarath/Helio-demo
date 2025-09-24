@@ -14,8 +14,7 @@ import {
   FaCompress,
   FaUserMd,
   FaComment,
-  FaShareSquare,
-  FaTimes
+  FaShareSquare
 } from 'react-icons/fa';
 import './VideoCallPage.css';
 import TransText from '../components/TransText';
@@ -40,6 +39,7 @@ const VideoCallPage = () => {
   const [invSearch, setInvSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showRxModal, setShowRxModal] = useState(false);
+  // Removed dosage/frequency/duration fields per latest requirement; prescriptions will not store these values now.
   const [rxToast, setRxToast] = useState(null); // {msg}
 
   // Lifecycle: ringing -> active after patient accept (patient auto-accept for doctor side)
@@ -130,10 +130,35 @@ const VideoCallPage = () => {
         patientName: patient.name,
         doctorId: doctor.id,
         doctorName: doctor.name,
-        medicines: chosen.map(c => ({ id:c.id, name:c.name, qty:1, expiry:c.expiry, stock:c.stock })),
+        medicines: chosen.map(c => ({
+          id:c.id,
+          name:c.name,
+          qty:1,
+          expiry:c.expiry,
+          stock:c.stock,
+          dosage: c.name.match(/\b(\d+\s?(mg|mcg|IU|ml))\b/i)?.[0] || '-',
+          frequency: '—',
+          duration: '—'
+        })),
         createdAt: new Date().toISOString()
       };
       localStorage.setItem(key, JSON.stringify([record, ...Array.isArray(existing)?existing:[]]));
+  // Notify same-tab listeners (storage event won't fire in same document)
+  try { window.dispatchEvent(new Event('helio_prescriptions_updated')); } catch(_){}
+      // Also push to pharmacy requests (Requests page) with same details
+      try {
+        const reqKey='helio_pharmacy_prescriptions';
+        const reqExisting = JSON.parse(localStorage.getItem(reqKey)||'[]');
+        const reqRecord = {
+          id: record.id.replace('RX','PR'),
+          patient:{ id: record.patientId, name: record.patientName },
+          doctor:{ id: record.doctorId, name: record.doctorName, specialty: doctor.specialty || 'General' },
+          medicines: record.medicines.map(m=>({ name:m.name, dosage:m.dosage, qty:m.qty, instructions:m.frequency || '' })),
+          created: record.createdAt,
+          status:'pending'
+        };
+        localStorage.setItem(reqKey, JSON.stringify([reqRecord, ...(Array.isArray(reqExisting)?reqExisting:[])]));
+      } catch(err){ console.error('Failed to write pharmacy request', err); }
       setShowRxModal(false);
       setSelectedIds(new Set());
       setRxToast({msg:'Prescription sent'});
@@ -347,6 +372,7 @@ const VideoCallPage = () => {
         <div className="rx-overlay-local">
           <div className="rx-modal rx-modal-large">
             <h3>Finalize Prescription</h3>
+            {/* Dosage/Frequency/Duration inputs removed */}
             <div className="rx-table-container">
               <table className="rx-table">
                 <thead>
@@ -354,7 +380,6 @@ const VideoCallPage = () => {
                     <th>Name</th>
                     <th>Status</th>
                     <th>Expiry</th>
-                    <th style={{width:62}}>Remove</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -364,27 +389,16 @@ const VideoCallPage = () => {
                     const av = availability(m.stock);
                     const statusClass = av.label.toLowerCase().replace(/\s+/g,'-');
                     return (
-                      <tr key={m.id} className="selected group" title="Click row to toggle select">
-                        <td onClick={()=>toggleSelect(m.id)}>{m.name}</td>
-                        <td onClick={()=>toggleSelect(m.id)}><span className={`status-badge ${statusClass}`}>{av.label}</span></td>
-                        <td onClick={()=>toggleSelect(m.id)}>{m.expiry}</td>
-                        <td className="text-center">
-                          <button
-                            type="button"
-                            aria-label="Remove medicine"
-                            onClick={(e)=>{ e.stopPropagation(); toggleSelect(m.id); }}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 text-gray-500 hover:text-red-600 hover:border-red-400 hover:bg-red-50 transition"
-                            title="Remove"
-                          >
-                            <FaTimes />
-                          </button>
-                        </td>
+                      <tr key={m.id} className="selected" onClick={()=>toggleSelect(m.id)} title="Click to remove">
+                        <td>{m.name}</td>
+                        <td><span className={`status-badge ${statusClass}`}>{av.label}</span></td>
+                        <td>{m.expiry}</td>
                       </tr>
                     );
                   })}
                   {selectedIds.size===0 && (
                     <tr>
-                      <td colSpan={4} style={{textAlign:'center',fontSize:12,color:'#555'}}>No medicines selected</td>
+                      <td colSpan={3} style={{textAlign:'center',fontSize:12,color:'#555'}}>No medicines selected</td>
                     </tr>
                   )}
                 </tbody>

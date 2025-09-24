@@ -23,10 +23,12 @@ const PharmacyHome = () => {
   }, []);
 
   const updateStatus = (id, status) => {
-    setRequests(prev => prev.map(r => r.id === id ? {...r, status} : r));
     const key = 'helio_pharmacy_requests';
-    const updated = requests.map(r => r.id === id ? {...r, status} : r);
-    localStorage.setItem(key, JSON.stringify(updated));
+    setRequests(prev => {
+      const next = prev.map(r => r.id === id ? { ...r, status } : r);
+      localStorage.setItem(key, JSON.stringify(next));
+      return next;
+    });
   };
 
   const statusColors = {
@@ -53,11 +55,19 @@ const PharmacyHome = () => {
         {requests.map(req => (
           <div key={req.id} className="card flex flex-col h-full border border-border-light">
             <div className="mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-lg text-gray-900 truncate">{req.patientName}</h3>
-                <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${statusColors[req.status]}`}>{req.status.charAt(0).toUpperCase()+req.status.slice(1)}</span>
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h3 className="font-bold text-lg text-gray-900 truncate">{req.patientName}</h3>
+                    <span
+                      className="inline-block text-[10px] leading-3 font-extrabold tracking-wide px-2 py-1 rounded border border-red-500 text-red-600 bg-red-50 uppercase"
+                      style={{letterSpacing:'.08em'}}
+                    >EMERGENCY</span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">Request ID: {req.id} • Patient ID: {req.patientId}</p>
+                </div>
+                <span className={`text-xs font-semibold px-2 py-1 rounded-full border self-start ${statusColors[req.status]}`}>{req.status.charAt(0).toUpperCase()+req.status.slice(1)}</span>
               </div>
-              <p className="text-xs text-gray-500">Request ID: {req.id} • Patient ID: {req.patientId}</p>
             </div>
             <div className="flex-1">
               <ul className="text-sm space-y-1 mb-3">
@@ -66,9 +76,9 @@ const PharmacyHome = () => {
               <div className="text-xs text-gray-500 flex items-center gap-2 mb-4"><FaClock className="text-gray-400"/> {new Date(req.date).toLocaleString()}</div>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-auto">
-              <button onClick={()=>updateStatus(req.id,'approved')} disabled={req.status!=='pending'} className={`btn btn-success py-2 px-3 text-xs ${req.status!=='pending'?'opacity-60 cursor-not-allowed':''}`}>Approve</button>
-              <button onClick={()=>updateStatus(req.id,'rejected')} disabled={req.status!=='pending'} className={`btn btn-secondary py-2 px-3 text-xs ${req.status!=='pending'?'opacity-60 cursor-not-allowed':''}`}>Reject</button>
-              <button onClick={()=>updateStatus(req.id,'preparing')} disabled={!(req.status==='approved')} className={`btn btn-outline py-2 px-3 text-xs ${req.status!=='approved'?'opacity-60 cursor-not-allowed':''}`}>Prepare</button>
+              <button onClick={()=>updateStatus(req.id,'approved')} className={`btn btn-success py-2 px-3 text-xs ${req.status==='approved'?'ring-2 ring-emerald-400':''}`}>Approve</button>
+              <button onClick={()=>updateStatus(req.id,'rejected')} className={`btn btn-secondary py-2 px-3 text-xs ${req.status==='rejected'?'ring-2 ring-rose-400':''}`}>Reject</button>
+              <button onClick={()=>updateStatus(req.id,'preparing')} className={`btn btn-outline py-2 px-3 text-xs ${req.status==='preparing'?'ring-2 ring-blue-400':''}`}>Prepare</button>
             </div>
           </div>
         ))}

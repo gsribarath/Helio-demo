@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import PharmacyBottomNavigation from '../../components/PharmacyBottomNavigation';
 import { FaFilter } from 'react-icons/fa';
 
 const Orders = () => {
@@ -80,7 +79,6 @@ const Orders = () => {
           </table>
         </div>
       </div>
-      <PharmacyBottomNavigation />
     </div>
   );
 };

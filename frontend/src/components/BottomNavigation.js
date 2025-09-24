@@ -1,10 +1,40 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+// Unified bottom navigation styling used across roles (patient, doctor, pharmacy)
+// Consistent colors:
+//  Active icon background: #2563eb (blue)
+//  Inactive icon color/text: #7c3aed (indigo)
+//  Active text color: #2563eb
+//  Top gradient bar: blue -> indigo -> emerald
+//  Height: 72px, icon container: 36x36
 const BottomNavigation = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const navRef = useRef(null);
+
+  // Defensive: keep bottom nav fixed & visible always (no scroll listener needed now).
+  useEffect(() => {
+    const el = navRef.current;
+    if(!el) return;
+    const apply = () => {
+      el.classList.add('app-bottomnav-fixed');
+      el.style.position = 'fixed';
+      el.style.bottom = '0';
+      el.style.left = '0';
+      el.style.right = '0';
+      el.style.width = '100%';
+      el.style.transform = 'none';
+      el.style.opacity = '1';
+      el.style.visibility = 'visible';
+      el.style.zIndex = '9999';
+    };
+    apply();
+    const mo = new MutationObserver(apply);
+    mo.observe(el, { attributes:true, attributeFilter:['class','style'] });
+    return () => { mo.disconnect(); };
+  }, []);
 
   // Icons
   const {
@@ -26,20 +56,13 @@ const BottomNavigation = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200"
-      style={{ 
+      ref={navRef}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 app-bottomnav-fixed"
+      style={{
         backgroundColor: '#ffffff',
-        WebkitBackdropFilter: 'none',
-        backdropFilter: 'none',
-        boxShadow: '0 -8px 20px rgba(2,6,23,0.06)',
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.06)',
         zIndex: 9999,
-        overflow: 'hidden',
-        transform: 'translateZ(0)',
-        willChange: 'auto'
+        overflow: 'hidden'
       }}
       role="navigation"
       aria-label="Bottom navigation"
@@ -63,12 +86,13 @@ const BottomNavigation = () => {
               key={item.path}
               to={item.path}
               className="group relative flex flex-col items-center justify-center no-underline"
-              style={{ 
+              style={{
                 textDecoration: 'none',
                 height: 56,
                 margin: '0 4px',
-                borderRadius: 10,
-                background: 'transparent'
+                borderRadius: 12,
+                background: 'transparent',
+                transition: 'background-color 160ms ease'
               }}
               aria-label={`Navigate to ${item.label}`}
               aria-current={isActive ? 'page' : undefined}
@@ -80,7 +104,7 @@ const BottomNavigation = () => {
                   height: 36,
                   borderRadius: 12,
                   backgroundColor: isActive ? '#2563eb' : 'transparent',
-                  boxShadow: isActive ? '0 6px 14px rgba(37,99,235,0.25)' : 'none',
+                  boxShadow: isActive ? '0 6px 14px rgba(37,99,235,0.25)' : 'inset 0 0 0 1px rgba(124,58,237,0.15)',
                   transition: 'all 180ms ease'
                 }}
               >

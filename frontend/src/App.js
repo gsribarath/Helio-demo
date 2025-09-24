@@ -9,6 +9,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Pages
 import Home from './pages/Home';
 import Medicines from './pages/Medicines';
+import MyMedicines from './pages/MyMedicines';
 import Availability from './pages/Availability';
 import Appointments from './pages/Appointments';
 import Schedule from './pages/Schedule';
@@ -26,8 +27,8 @@ import DoctorBottomNavigation from './components/DoctorBottomNavigation';
 // Pharmacy components
 import PharmacySidebar from './components/pharmacy/PharmacySidebar';
 import PharmacyHome from './pages/pharmacy/PharmacyHome';
+import PharmacyRequests from './pages/pharmacy/PharmacyRequests';
 import Inventory from './pages/pharmacy/Inventory';
-import Orders from './pages/pharmacy/Orders';
 import PharmacyReports from './pages/pharmacy/PharmacyReports';
 import DoctorPatientInfo from './pages/doctor/DoctorPatientInfo';
 import DoctorPatients from './pages/doctor/DoctorPatients';
@@ -62,6 +63,14 @@ function App() {
   useEffect(() => {
     document.documentElement.dir = i18n.dir();
   }, [i18n, i18n.language]);
+
+  // Ensure body always reserves space for fixed bottom navigation bars
+  useEffect(() => {
+    document.body.classList.add('app-has-bottomnav');
+    return () => {
+      document.body.classList.remove('app-has-bottomnav');
+    };
+  }, []);
 
   // Handle login
   const handleLogin = (userData) => {
@@ -111,6 +120,7 @@ function App() {
           <Route path="/my-appointments" element={<MyAppointments />} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/medicines" element={<Medicines />} />
+          <Route path="/my-medicines" element={<MyMedicines />} />
           <Route path="/reports" element={<Reports />} />
           {/* Prescriptions routes to Medicines for now */}
           <Route path="/prescriptions" element={<Medicines />} />
@@ -145,8 +155,8 @@ function App() {
         <Routes>
           <Route path="/" element={<PharmacyHome />} />
           <Route path="/pharmacy" element={<PharmacyHome />} />
+          <Route path="/pharmacy/requests" element={<PharmacyRequests />} />
           <Route path="/pharmacy/inventory" element={<Inventory />} />
-          <Route path="/pharmacy/orders" element={<Orders />} />
           <Route path="*" element={<Navigate to="/pharmacy" replace />} />
         </Routes>
       );
@@ -166,24 +176,11 @@ function App() {
       <div className="App min-h-screen bg-gray-50">
         <div className="flex flex-col min-h-screen">
           <Navbar user={user} onLogout={handleLogout} />
-          <main
-            className="flex-1"
-            style={{
-              paddingTop: '64px', // equal to header height
-              paddingLeft: '8px',
-              paddingRight: '8px',
-              paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))', // taller solid footer clearance
-              minHeight: 'calc(100vh - 144px)' // ensure content takes full height minus header and footer
-            }}
-          >
+          <main className="flex-1 px-2" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
             <ScrollToTop />
             {getRoleBasedRoutes()}
           </main>
-          {/* Global spacer to prevent overlap with fixed bottom nav */}
-          <div
-            aria-hidden="true"
-            style={{ height: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}
-          />
+          {/* Spacer no longer required; body padding via .app-has-bottomnav handles layout */}
           <BottomNavigation />
         </div>
       </div>
@@ -196,39 +193,21 @@ function App() {
       {user.role === 'doctor' ? (
         <div className="flex flex-col min-h-screen bg-gray-50">
           <Navbar user={user} onLogout={handleLogout} />
-          <main
-            className="flex-1"
-            style={{
-              paddingTop: '64px',
-              paddingLeft: '8px',
-              paddingRight: '8px',
-              paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
-              minHeight: 'calc(100vh - 144px)'
-            }}
-          >
+          <main className="flex-1 px-2" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
             <ScrollToTop />
             {getRoleBasedRoutes()}
           </main>
-          <div aria-hidden="true" style={{ height: 'calc(88px + env(safe-area-inset-bottom, 0px))' }} />
+          {/* Spacer removed; body padding via .app-has-bottomnav handles layout */}
           <DoctorBottomNavigation />
         </div>
       ) : user.role === 'pharmacist' ? (
         <div className="flex flex-col min-h-screen bg-gray-50">
           <Navbar user={user} onLogout={handleLogout} />
-          <main
-            className="flex-1"
-            style={{
-              paddingTop: '64px',
-              paddingLeft: '8px',
-              paddingRight: '8px',
-              paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
-              minHeight: 'calc(100vh - 144px)'
-            }}
-          >
+          <main className="flex-1 px-2" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
             <ScrollToTop />
             {getRoleBasedRoutes()}
           </main>
-          <div aria-hidden="true" style={{ height: 'calc(88px + env(safe-area-inset-bottom, 0px))' }} />
+          {/* Spacer removed; body padding via .app-has-bottomnav handles layout */}
           {React.createElement(require('./components/PharmacyBottomNavigation').default)}
         </div>
       ) : (
