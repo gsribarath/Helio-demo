@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { appointmentAPI } from '../services/api';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaCheck } from 'react-icons/fa';
 
 const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
   const { t } = useTranslation();
@@ -13,7 +13,6 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
     patientName: '',
     age: '',
     healthIssue: '',
-    specialist: doctor?.specialty || '',
     preferredDate: '',
     preferredTime: '',
     hospitalName: 'Civil Hospital'
@@ -39,19 +38,7 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
     }
   }, [isOpen]);
 
-  // Specialist options
-  const specialists = [
-    'General Physician',
-    'Cardiologist',
-    'Dermatologist',
-    'Pediatrician',
-    'Orthopedic',
-    'Neurologist',
-    'Gynecologist',
-    'ENT Specialist',
-    'Psychiatrist',
-    'Ophthalmologist'
-  ];
+  // Specialist field removed — specialty comes from the selected doctor
 
   // Hospital options
   const hospitals = [
@@ -91,7 +78,7 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
         symptoms: formData.healthIssue,
         consultation_type: 'video',
         duration_minutes: 30,
-        notes: `Patient: ${formData.patientName}, Age: ${formData.age}, Specialist: ${formData.specialist}, Hospital: ${formData.hospitalName}`
+        notes: `Patient: ${formData.patientName}, Age: ${formData.age}, Hospital: ${formData.hospitalName}${doctor?.specialty ? `, Specialty: ${doctor.specialty}` : ''}`
       };
       
       // Call API to create appointment
@@ -111,7 +98,7 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
           patientId: user?.username || 'p001', // Store the patient ID from auth context
           age: formData.age,
           healthIssue: formData.healthIssue,
-          specialist: formData.specialist,
+          specialist: doctor?.specialty || '',
           date: formData.preferredDate,
           time: formData.preferredTime,
           hospitalName: formData.hospitalName,
@@ -154,7 +141,6 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
       patientName: '',
       age: '',
       healthIssue: '',
-      specialist: doctor?.specialty || '',
       preferredDate: '',
       preferredTime: '',
       hospitalName: 'Civil Hospital'
@@ -274,24 +260,7 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-              {/* Specialist Required */}
-              <div className="form-group">
-                <label className="label">{t('specialist_required')}</label>
-                <select
-                  name="specialist"
-                  value={formData.specialist}
-                  onChange={handleInputChange}
-                  required
-                  className="input"
-                >
-                  <option value="">{t('select_specialist')}</option>
-                  {specialists.map(specialist => (
-                    <option key={specialist} value={specialist}>
-                      {specialist}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Specialist field removed: specialty is taken from selected doctor */}
 
               {/* Date and Time Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -401,10 +370,6 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date & Time:</span>
                   <span className="font-medium">{formData.preferredDate} at {formData.preferredTime}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('specialist_required')}:</span>
-                  <span className="font-medium">{formData.specialist}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('hospital_name')}:</span>

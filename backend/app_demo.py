@@ -1,11 +1,13 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, url_for
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from werkzeug.utils import secure_filename
 import bcrypt
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 import json
+import uuid
 
 # Load environment variables
 load_dotenv()
@@ -30,6 +32,14 @@ jwt = JWTManager(app)
 
 # Create upload directory
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Helper functions
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# In-memory storage for prescription requests (in a real app, this would be in a database)
+PRESCRIPTION_REQUESTS = []
 
 # Demo users data (for testing without database)
 DEMO_USERS = {
@@ -282,6 +292,136 @@ def get_pharmacy_profile():
     except Exception as e:
         print(f"Get pharmacy profile error: {e}")
         return jsonify({'message': 'Internal server error'}), 500
+
+# File Upload Route
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    """Upload prescription image files"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'message': 'No file provided'}), 400
+        
+        file = request.files['file']
+        file_type = request.form.get('type', 'document')
+        
+        if file.filename == '':
+            return jsonify({'message': 'No file selected'}), 400
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Add timestamp to prevent filename conflicts
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+            filename = timestamp + filename
+            
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Return the absolute file URL (ensures frontend can load image regardless of origin)
+            try:
+                file_url = url_for('uploaded_file', filename=filename, _external=True)
+            except Exception:
+                # Fallback to relative path if building absolute URL fails
+                file_url = f'/uploads/{filename}'
+            
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'fileUrl': file_url,
+                'filename': filename
+            }), 200
+        else:
+            return jsonify({'message': 'Invalid file type'}), 400
+            
+    except Exception as e:
+        print(f"Upload error: {e}")
+        return jsonify({'message': 'Upload failed', 'error': str(e)}), 500
+
+# Serve uploaded files
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """Serve uploaded files"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# Prescription Request Routes
+@app.route('/api/prescription-requests', methods=['POST'])
+@jwt_required()
+def create_prescription_request():
+    """Create a new prescription request"""
+    try:
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        
+        # Find user
+        user = None
+        for username, user_data in DEMO_USERS.items():
+            if user_data['id'] == user_id:
+                user = user_data
+                break
+        
+        if not user or user['role'] != 'patient':
+            return jsonify({'message': 'Only patients can create prescription requests'}), 403
+        
+        # Create prescription request
+        prescription_request = {
+            'id': str(uuid.uuid4()),
+            'patientId': user['id'],
+            'patientName': f"{user['profile']['first_name']} {user['profile']['last_name']}",
+            'prescriptionImageUrl': data['prescriptionImageUrl'],
+            'notes': data.get('notes', ''),
+            'status': 'pending',
+            'createdAt': datetime.now().isoformat(),
+            'processedAt': None,
+            'processedBy': None
+        }
+        
+        PRESCRIPTION_REQUESTS.append(prescription_request)
+        
+        return jsonify({
+            'message': 'Prescription request created successfully',
+            'request_id': prescription_request['id']
+        }), 201
+        
+    except Exception as e:
+        print(f"Create prescription request error: {e}")
+        return jsonify({'message': 'Failed to create prescription request', 'error': str(e)}), 500
+
+@app.route('/api/prescription-requests', methods=['GET'])
+def get_prescription_requests():
+    """Get all prescription requests"""
+    try:
+        # Filter pending requests
+        pending_requests = [req for req in PRESCRIPTION_REQUESTS if req['status'] == 'pending']
+        
+        return jsonify(pending_requests), 200
+        
+    except Exception as e:
+        print(f"Get prescription requests error: {e}")
+        return jsonify({'message': 'Failed to fetch prescription requests', 'error': str(e)}), 500
+
+@app.route('/api/prescription-requests/<request_id>/status', methods=['PUT'])
+def update_prescription_request_status(request_id):
+    """Update prescription request status"""
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        processed_by = data.get('processedBy', 'Pharmacist')
+        
+        if new_status not in ['approved', 'rejected']:
+            return jsonify({'message': 'Invalid status'}), 400
+        
+        # Find and update the request
+        for req in PRESCRIPTION_REQUESTS:
+            if req['id'] == request_id:
+                req['status'] = new_status
+                req['processedAt'] = datetime.now().isoformat()
+                req['processedBy'] = processed_by
+                
+                return jsonify({'message': 'Prescription request status updated successfully'}), 200
+        
+        return jsonify({'message': 'Prescription request not found'}), 404
+        
+    except Exception as e:
+        print(f"Update prescription request error: {e}")
+        return jsonify({'message': 'Failed to update prescription request status', 'error': str(e)}), 500
 
 # Health check
 @app.route('/api/health', methods=['GET'])

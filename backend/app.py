@@ -113,6 +113,16 @@ class DoctorSchedule(db.Model):
     end_time = db.Column(db.Time, nullable=False)
     is_available = db.Column(db.Boolean, default=True)
 
+class PrescriptionRequest(db.Model):
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    patient_id = db.Column(db.String(36), db.ForeignKey('patient.id'), nullable=False)
+    prescription_image_url = db.Column(db.String(500), nullable=False)
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_at = db.Column(db.DateTime)
+    processed_by = db.Column(db.String(100))  # Pharmacist name or ID
+
 # Helper functions
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
@@ -422,6 +432,139 @@ def get_available_slots():
         
     except Exception as e:
         return jsonify({'message': 'Failed to fetch available slots', 'error': str(e)}), 500
+
+# File Upload Route
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'message': 'No file provided'}), 400
+        
+        file = request.files['file']
+        file_type = request.form.get('type', 'document')
+        
+        if file.filename == '':
+            return jsonify({'message': 'No file selected'}), 400
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Add timestamp to prevent filename conflicts
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+            filename = timestamp + filename
+            
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Return the file URL
+            file_url = f'/uploads/{filename}'
+            
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'fileUrl': file_url,
+                'filename': filename
+            }), 200
+        else:
+            return jsonify({'message': 'Invalid file type'}), 400
+            
+    except Exception as e:
+        return jsonify({'message': 'Upload failed', 'error': str(e)}), 500
+
+# Serve uploaded files
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# Prescription Request Routes
+@app.route('/api/prescription-requests', methods=['POST'])
+@jwt_required()
+def create_prescription_request():
+    try:
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        
+        # Find patient
+        user = User.query.get(user_id)
+        if not user or user.user_type != 'patient':
+            return jsonify({'message': 'Only patients can create prescription requests'}), 403
+        
+        patient = Patient.query.filter_by(user_id=user_id).first()
+        if not patient:
+            return jsonify({'message': 'Patient profile not found'}), 404
+        
+        # Create prescription request
+        prescription_request = PrescriptionRequest(
+            patient_id=patient.id,
+            prescription_image_url=data['prescriptionImageUrl'],
+            notes=data.get('notes', '')
+        )
+        
+        db.session.add(prescription_request)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Prescription request created successfully',
+            'request_id': prescription_request.id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to create prescription request', 'error': str(e)}), 500
+
+@app.route('/api/prescription-requests', methods=['GET'])
+def get_prescription_requests():
+    try:
+        # Get all pending prescription requests with patient info
+        requests = db.session.query(PrescriptionRequest, Patient).join(
+            Patient, PrescriptionRequest.patient_id == Patient.id
+        ).filter(PrescriptionRequest.status == 'pending').all()
+        
+        result = []
+        for req, patient in requests:
+            result.append({
+                'id': req.id,
+                'patient': {
+                    'id': patient.id,
+                    'name': patient.name,
+                    'age': patient.age,
+                    'gender': patient.gender,
+                    'phone': patient.phone
+                },
+                'prescriptionImageUrl': req.prescription_image_url,
+                'notes': req.notes,
+                'status': req.status,
+                'createdAt': req.created_at.isoformat()
+            })
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({'message': 'Failed to fetch prescription requests', 'error': str(e)}), 500
+
+@app.route('/api/prescription-requests/<request_id>/status', methods=['PUT'])
+def update_prescription_request_status(request_id):
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        processed_by = data.get('processedBy', 'Pharmacist')
+        
+        if new_status not in ['approved', 'rejected']:
+            return jsonify({'message': 'Invalid status'}), 400
+        
+        prescription_request = PrescriptionRequest.query.get(request_id)
+        if not prescription_request:
+            return jsonify({'message': 'Prescription request not found'}), 404
+        
+        prescription_request.status = new_status
+        prescription_request.processed_at = datetime.utcnow()
+        prescription_request.processed_by = processed_by
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Prescription request status updated successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Failed to update prescription request status', 'error': str(e)}), 500
 
 # Sample data creation function
 def create_sample_data():

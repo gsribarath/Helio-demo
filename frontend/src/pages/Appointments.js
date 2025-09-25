@@ -24,7 +24,6 @@ const Appointments = () => {
     patientName: '',
     age: '',
     healthIssue: '',
-    specialist: selectedDoctor?.specialty || '',
     preferredDate: '',
     preferredTime: '',
     hospitalName: 'Civil Hospital'
@@ -35,19 +34,7 @@ const Appointments = () => {
   const [appointmentId, setAppointmentId] = useState('');
   const [showToast, setShowToast] = useState(false);
 
-  // Specialist options
-  const specialists = [
-    { key: 'general_physician' },
-    { key: 'cardiologist' },
-    { key: 'dermatologist' },
-    { key: 'pediatrician' },
-    { key: 'orthopedic' },
-    { key: 'neurologist' },
-    { key: 'gynecologist' },
-    { key: 'ent_specialist' },
-    { key: 'psychiatrist' },
-    { key: 'ophthalmologist' }
-  ];
+  // Specialist field removed — specialty is derived from selected doctor
 
   // Hospital options
   const hospitals = [
@@ -80,7 +67,7 @@ const Appointments = () => {
     
     // Validate required fields
     if (!formData.patientName || !formData.age || !formData.healthIssue || 
-        !formData.specialist || !formData.preferredDate || !formData.preferredTime) {
+        !formData.preferredDate || !formData.preferredTime) {
       alert(t('validation_required_fields'));
       return;
     }
@@ -106,7 +93,7 @@ const Appointments = () => {
           patientId: user?.username || 'p001', // Store the patient ID from auth context
           age: formData.age,
           healthIssue: formData.healthIssue,
-          specialist: formData.specialist,
+          specialist: selectedDoctor?.specialty || '',
           date: formData.preferredDate, // YYYY-MM-DD
           time: formData.preferredTime, // e.g., 04:30 PM
           hospitalName: formData.hospitalName,
@@ -137,7 +124,6 @@ const Appointments = () => {
       patientName: '',
       age: '',
       healthIssue: '',
-      specialist: '',
       preferredDate: '',
       preferredTime: '',
       hospitalName: 'Civil Hospital'
@@ -196,7 +182,7 @@ const Appointments = () => {
                   <div className="flex justify-between"><span className="text-green-600">{t('appointment_id')}</span><span className="font-medium text-green-700">{appointmentId}</span></div>
                   <div className="flex justify-between"><span className="text-green-600">{t('patient_label')}</span><span className="font-medium text-green-700">{formData.patientName}</span></div>
                   <div className="flex justify-between"><span className="text-green-600">{t('date_time')}</span><span className="font-medium text-green-700">{formData.preferredDate} {formData.preferredTime}</span></div>
-                  <div className="flex justify-between"><span className="text-green-600">{t('specialist_label')}</span><span className="font-medium text-green-700">{t(`specialists.${formData.specialist}`) || formData.specialist}</span></div>
+                  {/* Specialist not shown since it is derived from the doctor */}
                 </div>
               </div>
             </div>
@@ -281,24 +267,7 @@ const Appointments = () => {
               />
             </div>
 
-            {/* Specialist Required */}
-            <div className="input-group">
-              <label className="text-sm font-medium text-text-primary mb-2">{t('specialist_required')} *</label>
-              <select
-                name="specialist"
-                value={formData.specialist}
-                onChange={handleInputChange}
-                className="input"
-                required
-              >
-                <option value="">{t('select_specialist')}</option>
-                {specialists.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {t(`specialists.${s.key}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Specialist field removed — specialty comes from selected doctor */}
 
             {/* Preferred Date */}
             <div className="input-group">

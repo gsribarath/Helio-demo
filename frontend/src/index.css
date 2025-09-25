@@ -139,6 +139,42 @@ code {
   --radius-lg: 1rem;
 }
 
+/* Reusable Buttons and Cards (no Tailwind required) */
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+}
+.card + .card { margin-top: 16px; }
+.card .section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.btn:disabled { cursor: not-allowed; }
+
+.btn-blue {
+  background: var(--primary-color);
+  color: #fff;
+  border: 1px solid var(--primary-color);
+  padding: 10px 16px;
+}
+.btn-blue:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.btn-blue:disabled { background: #e5e7eb; border-color: #e5e7eb; color: #9ca3af; }
+
+.btn-outline-blue {
+  background: #fff;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 8px 14px;
+}
+.btn-outline-blue:hover { background: var(--primary-light); }
+
 /* Enhanced Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

@@ -19,6 +19,8 @@ import VideoCallPage from './pages/VideoCallPage';
 import AudioCallPage from './pages/AudioCallPage';
 import Reports from './pages/Reports';
 import MyAppointments from './pages/MyAppointments';
+import RareMedicineRequest from './pages/RareMedicineRequest';
+import RequestMedicine from './pages/RequestMedicine';
 import DoctorHome from './pages/doctor/DoctorHome';
 import DoctorMyAppointments from './pages/doctor/DoctorMyAppointments';
 import DoctorProfile from './pages/doctor/DoctorProfile';
@@ -28,6 +30,7 @@ import DoctorBottomNavigation from './components/DoctorBottomNavigation';
 import PharmacySidebar from './components/pharmacy/PharmacySidebar';
 import PharmacyHome from './pages/pharmacy/PharmacyHome';
 import PharmacyRequests from './pages/pharmacy/PharmacyRequests';
+import PrescriptionImageRequests from './pages/pharmacy/PrescriptionImageRequests';
 import Inventory from './pages/pharmacy/Inventory';
 import PharmacyReports from './pages/pharmacy/PharmacyReports';
 import DoctorPatientInfo from './pages/doctor/DoctorPatientInfo';
@@ -118,6 +121,8 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/my-appointments" element={<MyAppointments />} />
+          <Route path="/request-medicine" element={<RequestMedicine />} />
+          <Route path="/rare-medicine-request" element={<RareMedicineRequest />} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/medicines" element={<Medicines />} />
           <Route path="/my-medicines" element={<MyMedicines />} />
@@ -156,6 +161,7 @@ function App() {
           <Route path="/" element={<PharmacyHome />} />
           <Route path="/pharmacy" element={<PharmacyHome />} />
           <Route path="/pharmacy/requests" element={<PharmacyRequests />} />
+          <Route path="/pharmacy/image-requests" element={<PrescriptionImageRequests />} />
           <Route path="/pharmacy/inventory" element={<Inventory />} />
           <Route path="*" element={<Navigate to="/pharmacy" replace />} />
         </Routes>

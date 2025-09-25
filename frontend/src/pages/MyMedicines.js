@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Structured table view of prescribed medicines (grouped by prescription with rowSpan, strong grid lines)
 export default function MyMedicines(){
   const [records, setRecords] = useState([]); // full prescription records
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(()=>{
     load();
@@ -35,6 +37,8 @@ export default function MyMedicines(){
     } catch(e){ console.error('Failed to clear prescriptions', e); }
   };
 
+  // Modal upload logic removed; handled by /request-medicine page
+
   return (
     <div className="min-h-screen bg-gray-50 pb-40">
       <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 mb-10 text-center px-4 shadow">
@@ -49,13 +53,30 @@ export default function MyMedicines(){
             <div className="text-xs text-gray-400">They will appear here once a doctor issues a prescription.</div>
           </div>
         )}
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4 mb-6">
+          <button 
+            type="button" 
+            onClick={() => navigate('/request-medicine')}
+            className="my-appointments-btn px-8 py-3 text-sm font-semibold text-center"
+            title="Request medicine with prescription"
+          >
+            Request Medicine
+          </button>
+          {records.length > 0 && (
+            <button 
+              type="button" 
+              onClick={clearAll} 
+              className="my-appointments-btn px-8 py-3 text-sm font-semibold text-center" 
+              title="Clear all prescriptions"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
         {records.length>0 && (
           <>
-            {/* Centered blue Clear All button (same visual style as inventory My Medicines button) */}
-            <div className="flex justify-center mb-6">
-              <button type="button" onClick={clearAll} className="my-appointments-btn px-8 py-3 text-sm font-semibold text-center" title="Clear all prescriptions">Clear All</button>
-            </div>
-            {/* Table styling for inner prescription medicine tables */}
             <style>{`
               /* Add strong black separator line between prescription blocks */
               .rx-card { border:none; border-radius:0; background:transparent; padding:0 0 20px 0; }
@@ -66,20 +87,17 @@ export default function MyMedicines(){
               .rx-inner-table tbody tr:nth-child(even){ background:#f8fafc; }
               .rx-inner-table tbody tr:hover { background:#eef2ff; }
             `}</style>
-            {/* 0.1cm gap between cards with rounded edge boxes */}
             <div className="flex flex-col" style={{ gap: '0.1cm' }}>
               {records.map(rec => {
                 const count = rec.medicines?.length || 0; // retained for empty table fallback
                 return (
                   <div key={rec.id} className="rx-card p-0 overflow-hidden">
-                    {/* Header simplified: removed doctor id & medicines count badge */}
                     <div className="text-left py-5 px-6 bg-white border-b border-gray-200">
                       <h2 className="text-xl font-bold text-gray-900 mb-2">{rec.doctorName}</h2>
                       <p className="text-gray-500 text-xs mb-2">{new Date(rec.createdAt).toLocaleString()}</p>
                       <p className="text-indigo-600 text-sm font-semibold">Prescription ID: {rec.id}</p>
                     </div>
 
-                    {/* Medicines Table */}
                     <div className="p-6 bg-gray-50">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm bg-white rx-inner-table">
@@ -116,6 +134,8 @@ export default function MyMedicines(){
           </>
         )}
       </main>
+
+      {/* Request popup removed: redirecting to /request-medicine */}
     </div>
   );
 }

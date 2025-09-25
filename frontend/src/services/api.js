@@ -103,4 +103,12 @@ export const uploadAPI = {
   }
 };
 
+// Prescription Request API calls
+export const prescriptionRequestAPI = {
+  getAll: (params = {}) => api.get('/prescription-requests', { params }),
+  create: (requestData) => api.post('/prescription-requests', requestData),
+  updateStatus: (id, status, processedBy) => 
+    api.put(`/prescription-requests/${id}/status`, { status, processedBy })
+};
+
 export default api;
