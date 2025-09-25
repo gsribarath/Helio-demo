@@ -1,34 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { FaClock } from 'react-icons/fa';
 
 const PharmacyHome = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulated load from localStorage or API
+    // Load only emergency requests from localStorage
     const key = 'helio_pharmacy_requests';
     const raw = localStorage.getItem(key);
     if (raw) {
-      try { setRequests(JSON.parse(raw)); } catch(_) {}
+      try { 
+        const allRequests = JSON.parse(raw);
+        
+        // Remove demo data (requests without type='emergency')
+        const cleanedRequests = allRequests.filter(req => req.type === 'emergency');
+        if (cleanedRequests.length !== allRequests.length) {
+          localStorage.setItem(key, JSON.stringify(cleanedRequests));
+        }
+        
+        // Filter to only show emergency requests and sort by date (newest first)
+        const emergencyRequests = cleanedRequests
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        setRequests(emergencyRequests);
+      } catch(_) {
+        setRequests([]);
+      }
     } else {
-      const seed = [
-        { id: 'R-1001', patientId: 'P-001', patientName: 'Gurpreet Singh', medicines: [{name:'Atorvastatin', qty:30}], date: new Date().toISOString(), status: 'pending' },
-        { id: 'R-1002', patientId: 'P-017', patientName: 'Simran Kaur', medicines: [{name:'Metformin', qty:60},{name:'Vitamin D3', qty:10}], date: new Date(Date.now()-3600_000).toISOString(), status: 'pending' }
-      ];
-      localStorage.setItem(key, JSON.stringify(seed));
-      setRequests(seed);
+      setRequests([]);
     }
     setLoading(false);
+
+    // Listen for new emergency requests
+    const handleStorageChange = () => {
+      const updatedRaw = localStorage.getItem(key);
+      if (updatedRaw) {
+        try {
+          const allRequests = JSON.parse(updatedRaw);
+          const emergencyRequests = allRequests
+            .filter(req => req.type === 'emergency')
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+          setRequests(emergencyRequests);
+        } catch(_) {
+          setRequests([]);
+        }
+      }
+    };
+
+    const handleEmergencyUpdate = () => {
+      handleStorageChange();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('emergency_request_updated', handleEmergencyUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('emergency_request_updated', handleEmergencyUpdate);
+    };
   }, []);
 
   const updateStatus = (id, status) => {
     const key = 'helio_pharmacy_requests';
-    setRequests(prev => {
-      const next = prev.map(r => r.id === id ? { ...r, status } : r);
-      localStorage.setItem(key, JSON.stringify(next));
-      return next;
-    });
+    const allRequests = JSON.parse(localStorage.getItem(key) || '[]');
+    const updatedAllRequests = allRequests.map(r => r.id === id ? { ...r, status } : r);
+    localStorage.setItem(key, JSON.stringify(updatedAllRequests));
+    
+    // Update the emergency requests displayed
+    const emergencyRequests = updatedAllRequests
+      .filter(req => req.type === 'emergency')
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    setRequests(emergencyRequests);
   };
 
   const statusColors = {
@@ -42,47 +83,43 @@ const PharmacyHome = () => {
     <div className="min-h-screen pb-32 bg-gray-50">
       <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12 mb-8">
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl font-black mb-4 tracking-tight">Welcome to Helio</h1>
-          <p className="text-primary-light font-medium max-w-2xl mx-auto">Manage and track pharmacy medicine requests in real-time. Approve, reject and prepare orders seamlessly.</p>
-          <p className="text-primary-light mt-2">Efficient dispensing ensures better patient outcomes.</p>
+          <h1 className="text-4xl font-black mb-2 tracking-tight">Welcome to Helio</h1>
+          <p className="text-primary-light">Manage and track emergency medicine requests in real-time.</p>
+          <p className="text-primary-light mt-1">Emergency requests are prioritized for immediate attention.</p>
         </div>
       </div>
 
       {loading && <div className="text-center py-12 text-gray-500">Loading requests...</div>}
-      {!loading && requests.length === 0 && <div className="text-center py-16 bg-white border rounded-lg shadow-sm">No requests yet.</div>}
+      {!loading && requests.length === 0 && (
+        <div className="text-center py-16 bg-white border rounded-lg shadow-sm">No emergency requests yet.</div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{gap:'0.1cm'}}>
-        {requests.map(req => (
-          <div key={req.id} className="card flex flex-col h-full border border-border-light">
-            <div className="mb-3">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <h3 className="font-bold text-lg text-gray-900 truncate">{req.patientName}</h3>
-                    <span
-                      className="inline-block text-[10px] leading-3 font-extrabold tracking-wide px-2 py-1 rounded border border-red-500 text-red-600 bg-red-50 uppercase"
-                      style={{letterSpacing:'.08em'}}
-                    >EMERGENCY</span>
-                  </div>
-                  <p className="text-xs text-gray-500 truncate">Request ID: {req.id} • Patient ID: {req.patientId}</p>
-                </div>
-                <span className={`text-xs font-semibold px-2 py-1 rounded-full border self-start ${statusColors[req.status]}`}>{req.status.charAt(0).toUpperCase()+req.status.slice(1)}</span>
-              </div>
-            </div>
-            <div className="flex-1">
-              <ul className="text-sm space-y-1 mb-3">
-                {req.medicines.map((m,i)=>(<li key={i} className="flex justify-between"><span className="text-gray-700">{m.name}</span><span className="font-semibold text-gray-900">{m.qty}</span></li>))}
-              </ul>
-              <div className="text-xs text-gray-500 flex items-center gap-2 mb-4"><FaClock className="text-gray-400"/> {new Date(req.date).toLocaleString()}</div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mt-auto">
-              <button onClick={()=>updateStatus(req.id,'approved')} className={`btn btn-success py-2 px-3 text-xs ${req.status==='approved'?'ring-2 ring-emerald-400':''}`}>Approve</button>
-              <button onClick={()=>updateStatus(req.id,'rejected')} className={`btn btn-secondary py-2 px-3 text-xs ${req.status==='rejected'?'ring-2 ring-rose-400':''}`}>Reject</button>
-              <button onClick={()=>updateStatus(req.id,'preparing')} className={`btn btn-outline py-2 px-3 text-xs ${req.status==='preparing'?'ring-2 ring-blue-400':''}`}>Prepare</button>
-            </div>
+      {requests.length > 0 && (
+        <div className="container mx-auto px-6">
+          <div className="overflow-x-auto bg-white border rounded-lg shadow-sm">
+            <table className="w-full pharmacy-table">
+              <thead>
+                <tr>
+                  <th className="text-left">Patient Name</th>
+                  <th className="text-left">Patient ID</th>
+                  <th className="text-left">Requested Date</th>
+                  <th className="text-left">Requested Medicine Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req) => (
+                  <tr key={req.id}>
+                    <td>{req.patientName || '-'}</td>
+                    <td>{req.patientId || '-'}</td>
+                    <td>{new Date(req.date).toLocaleString()}</td>
+                    <td>{(req.medicines || []).map(m=>m.name).join(', ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -63,6 +63,14 @@ export default function MyMedicines(){
           >
             Request Medicine
           </button>
+          <button 
+            type="button" 
+            onClick={() => navigate('/emergency-request')}
+            className="emergency-btn px-8 py-3 text-sm font-semibold text-center"
+            title="Emergency medicine request"
+          >
+            Emergency
+          </button>
           {records.length > 0 && (
             <button 
               type="button" 

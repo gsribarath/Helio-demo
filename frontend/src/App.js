@@ -21,6 +21,7 @@ import Reports from './pages/Reports';
 import MyAppointments from './pages/MyAppointments';
 import RareMedicineRequest from './pages/RareMedicineRequest';
 import RequestMedicine from './pages/RequestMedicine';
+import EmergencyRequest from './pages/EmergencyRequest';
 import DoctorHome from './pages/doctor/DoctorHome';
 import DoctorMyAppointments from './pages/doctor/DoctorMyAppointments';
 import DoctorProfile from './pages/doctor/DoctorProfile';
@@ -122,6 +123,7 @@ function App() {
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/my-appointments" element={<MyAppointments />} />
           <Route path="/request-medicine" element={<RequestMedicine />} />
+          <Route path="/emergency-request" element={<EmergencyRequest />} />
           <Route path="/rare-medicine-request" element={<RareMedicineRequest />} />
           <Route path="/availability" element={<Availability />} />
           <Route path="/medicines" element={<Medicines />} />

@@ -396,6 +396,56 @@ code {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary-color) 35%, transparent);
 }
 
+/* Emergency button styling - highlighted in red */
+.emergency-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #dc2626; /* red-600 */
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px; /* pill */
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.emergency-btn:hover {
+  background-color: #b91c1c; /* red-700 */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.emergency-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, #dc2626 35%, transparent);
+}
+
+/* Medicine dropdown styling */
+.medicine-dropdown {
+  scrollbar-width: thin;
+  scrollbar-color: #dc2626 #f3f4f6;
+}
+
+.medicine-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.medicine-dropdown::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.medicine-dropdown::-webkit-scrollbar-thumb {
+  background: #dc2626;
+  border-radius: 3px;
+}
+
+.medicine-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #b91c1c;
+}
+
 .card {
   background-color: var(--bg-primary);
   border-radius: var(--radius-lg);
