@@ -53,10 +53,31 @@ export default function DoctorMyAppointments(){
   return (
     <div className="ma-page container mx-auto px-6 py-8">
       <h1 className="text-2xl font-bold mb-4">Doctor – {t('appointments', t('my_appointments'))}</h1>
-      <div className="ma-tabs card mb-6">
-        <button className={`ma-tab ${tab==='upcoming'?'active':''}`} onClick={()=>setTab('upcoming')}>{t('upcoming')}</button>
-        <button className={`ma-tab ${tab==='waiting'?'active':''}`} onClick={()=>setTab('waiting')}>{t('waiting','Waiting')}</button>
-        <button className={`ma-tab ${tab==='completed'?'active':''}`} onClick={()=>setTab('completed')}>{t('completed','Completed')}</button>
+      <div className="ma-tabs card mb-6" role="tablist" aria-label="Doctor appointment sections">
+        <button
+          className={`ma-tab ${tab==='upcoming'?'active':''}`}
+          role="tab"
+          aria-selected={tab==='upcoming'}
+          onClick={()=>setTab('upcoming')}
+        >
+          {t('upcoming')} <span className="ma-count">({sections.upcoming.length})</span>
+        </button>
+        <button
+          className={`ma-tab ${tab==='waiting'?'active':''}`}
+          role="tab"
+          aria-selected={tab==='waiting'}
+          onClick={()=>setTab('waiting')}
+        >
+          {t('waiting','Waiting')} <span className="ma-count">({sections.waiting.length})</span>
+        </button>
+        <button
+          className={`ma-tab ${tab==='completed'?'active':''}`}
+          role="tab"
+          aria-selected={tab==='completed'}
+          onClick={()=>setTab('completed')}
+        >
+          {t('completed','Completed')} <span className="ma-count">({sections.completed.length})</span>
+        </button>
       </div>
       <div className="ma-list">
         {list.length ? list.map(renderCard) : (

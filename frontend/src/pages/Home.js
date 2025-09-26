@@ -42,6 +42,43 @@ const Home = () => {
   // Track which doctors have accepted (status in_progress) appointments for this patient
   const PATIENT_NAME = 'Gurpreet Singh'; // demo assumption
   const [acceptedDoctorIds, setAcceptedDoctorIds] = useState(new Set());
+  // Upcoming appointments count for My Appointments button
+  const [upcomingCount, setUpcomingCount] = useState(0);
+  const [badgeAnimate, setBadgeAnimate] = useState(false); // triggers pop animation when count changes
+
+  // Helper to parse date/time (shared logic with appointments pages)
+  const toDate = (dateStr, timeStr) => {
+    if (!dateStr) return null;
+    const [hhmm, period] = (timeStr || '00:00').split(' ');
+    const [hhRaw, mm] = hhmm.split(':');
+    let hh = parseInt(hhRaw, 10);
+    if (period) {
+      const isPM = period.toUpperCase() === 'PM';
+      if (isPM && hh < 12) hh += 12;
+      if (!isPM && hh === 12) hh = 0;
+    }
+    return new Date(`${dateStr}T${String(hh).padStart(2,'0')}:${mm || '00'}:00`);
+  };
+
+  const computeUpcomingAppointments = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('helio_appointments');
+      const arr = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(arr)) { setUpcomingCount(0); return; }
+      const now = new Date();
+      let count = 0;
+      for (const a of arr) {
+        if (!a || !a.id || !a.date || !a.time) continue;
+        if (a.status === 'cancelled' || a.status === 'completed') continue;
+        const d = toDate(a.date, a.time);
+        if (d && d.getTime() >= now.getTime()) count++;
+      }
+      setUpcomingCount(count);
+    } catch (e) {
+      console.error('Failed to compute upcoming appointments:', e);
+      setUpcomingCount(0);
+    }
+  }, []);
 
   // Dummy data for demonstration
   const dummyDoctors = [
@@ -102,6 +139,27 @@ const Home = () => {
   useEffect(() => {
     fetchDoctors();
   }, []);
+
+  // Initial load of upcoming appointments & listener for real-time updates
+  useEffect(() => {
+    computeUpcomingAppointments();
+    const onStorage = (e) => {
+      if (e.key === 'helio_appointments') computeUpcomingAppointments();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [computeUpcomingAppointments]);
+
+  // Trigger badge animation whenever the count transitions to a positive number or changes
+  const prevCountRef = React.useRef(0);
+  useEffect(() => {
+    if (upcomingCount > 0 && upcomingCount !== prevCountRef.current) {
+      setBadgeAnimate(true);
+      const to = setTimeout(() => setBadgeAnimate(false), 600);
+      return () => clearTimeout(to);
+    }
+    prevCountRef.current = upcomingCount;
+  }, [upcomingCount]);
 
   const loadAcceptedAppointments = useCallback(() => {
     try {
@@ -275,9 +333,19 @@ const Home = () => {
           <button
             onClick={() => navigate('/my-appointments')}
             aria-label={t('my_appointments')}
-            className="my-appointments-btn w-full sm:w-auto max-w-xs"
+            className="my-appointments-btn w-full sm:w-auto max-w-xs relative flex items-center justify-center px-8 py-3"
+            style={{ lineHeight: '1', minHeight: '48px' }}
           >
-            {t('my_appointments')}
+            <span className="text-sm font-semibold tracking-wide">{t('my_appointments')}</span>
+            {upcomingCount > 0 && (
+              <span
+                key={upcomingCount /* force reflow for animation on change */}
+                className={`notif-badge ${badgeAnimate ? 'pop' : ''}`}
+                aria-label={t('upcoming', 'Upcoming appointments count')}
+              >
+                {upcomingCount}
+              </span>
+            )}
           </button>
         </div>
         {/* Search and Filters - Centered and Professional */}

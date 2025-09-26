@@ -110,6 +110,7 @@ const Inventory = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null); // existing id or 'new'
+  const [searchTerm, setSearchTerm] = useState('');
   const [draft, setDraft] = useState({ id:'', name:'', category:'General', stock:0, expiry:'' });
   const [navPad, setNavPad] = useState(160); // dynamic padding below table
   const scrollRef = useRef(null);
@@ -229,6 +230,12 @@ const Inventory = () => {
     return d.toLocaleDateString();
   };
 
+  const filteredItems = items.filter(i => {
+    if(!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q) || i.id.toLowerCase().includes(q);
+  });
+
   return (
     <div className="min-h-screen pb-32 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 pt-8">
@@ -249,6 +256,40 @@ const Inventory = () => {
         </div>
 
         {loading && <div className="text-center py-12 text-gray-500">Loading inventory...</div>}
+
+        {/* Search Card (styled to match patient search / elevated card) */}
+        <div className="card-elevated mb-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label htmlFor="inventory-search" className="block text-sm font-semibold text-text-primary mb-1">Search medicines</label>
+              <div className="input-wrapper">
+                <input
+                  id="inventory-search"
+                  type="text"
+                  placeholder="Search medicines..."
+                  value={searchTerm}
+                  onChange={(e)=>setSearchTerm(e.target.value)}
+                  className="input"
+                  autoComplete="off"
+                  aria-label="Search medicines"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    aria-label="clear search"
+                    className="input-clear-btn"
+                    onClick={()=>setSearchTerm('')}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              {searchTerm && (
+                <div className="mt-2 text-[11px] text-gray-500">{filteredItems.length} match{filteredItems.length===1?'':'es'}</div>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden max-w-4xl mx-auto">
           <div ref={scrollRef} className="overflow-auto" style={{maxHeight:'58vh', paddingBottom: navPad}}>
@@ -281,7 +322,7 @@ const Inventory = () => {
                     </td>
                   </tr>
                 )}
-                {items.map(item => {
+                {filteredItems.map(item => {
                   const isEditing = editingId === item.id;
                   const av = availability(isEditing? draft.stock : item.stock);
                   return (

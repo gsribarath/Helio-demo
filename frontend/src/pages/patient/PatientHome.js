@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -22,11 +22,54 @@ const PatientHome = () => {
   const [quickActions, setQuickActions] = useState([]);
   const [nearbyPharmacies, setNearbyPharmacies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [appointmentRefresh, setAppointmentRefresh] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
     loadNotifications(); // Load notifications on component mount
   }, []);
+
+  // Utility function to parse and compare dates (same as MyAppointments.js)
+  const toDate = (dateStr, timeStr) => {
+    if (!dateStr) return null;
+    const [hhmm, period] = (timeStr || '00:00').split(' ');
+    const [hhRaw, mm] = hhmm.split(':');
+    let hh = parseInt(hhRaw, 10);
+    if (period) {
+      const isPM = period.toUpperCase() === 'PM';
+      if (isPM && hh < 12) hh += 12;
+      if (!isPM && hh === 12) hh = 0;
+    }
+    const iso = `${dateStr}T${String(hh).padStart(2, '0')}:${mm || '00'}:00`;
+    return new Date(iso);
+  };
+
+  // Calculate appointment counts
+  const appointmentCounts = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('helio_appointments');
+      const allAppointments = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(allAppointments)) return { total: 0, upcoming: 0 };
+
+      const validAppointments = allAppointments.filter(a => a && a.id && a.date && a.time);
+      const now = new Date();
+      let upcoming = 0;
+
+      for (const a of validAppointments) {
+        if (a.status === 'cancelled' || a.status === 'completed') continue;
+        const d = toDate(a.date, a.time);
+        if (d && d.getTime() >= now.getTime()) upcoming++;
+      }
+
+      return { 
+        total: validAppointments.length,
+        upcoming: upcoming
+      };
+    } catch (e) {
+      console.error('Failed to calculate appointment counts:', e);
+      return { total: 0, upcoming: 0 };
+    }
+  }, [appointmentRefresh]);
 
   const loadNotifications = () => {
     try {
@@ -40,11 +83,14 @@ const PatientHome = () => {
     }
   };
 
-  // Listen for storage changes to update notifications in real-time
+  // Listen for storage changes to update notifications and appointments in real-time
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'helio_notifications') {
         loadNotifications();
+      }
+      if (e.key === 'helio_appointments') {
+        setAppointmentRefresh(x => x + 1);
       }
     };
     
@@ -110,7 +156,8 @@ const PatientHome = () => {
       icon: FaCalendarAlt,
       color: 'bg-indigo-500',
       route: '/my-appointments',
-      hasNotification: notifications.filter(n => !n.read && n.type === 'appointment_accepted').length > 0
+      hasNotification: notifications.filter(n => !n.read && n.type === 'appointment_accepted').length > 0,
+      appointmentCount: appointmentCounts.upcoming
     },
     {
       id: 'book-appointment',
@@ -245,10 +292,10 @@ const PatientHome = () => {
                 className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative"
                 onClick={() => window.location.href = action.route}
               >
-                {/* Notification Badge */}
-                {action.hasNotification && (
-                  <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg">
-                    1
+                {/* Upcoming Appointments Count (always show for My Appointments card) */}
+                {action.id === 'my-appointments' && (
+                  <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-6 min-w-6 px-2 flex items-center justify-center font-bold shadow-lg" title="Upcoming appointments">
+                    {typeof action.appointmentCount === 'number' ? action.appointmentCount : 0}
                   </div>
                 )}
                 <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3`}>
@@ -258,7 +305,9 @@ const PatientHome = () => {
                   {action.title}
                 </h3>
                 <p className="text-gray-600 text-xs mt-1">
-                  {action.subtitle}
+                  {action.id === 'my-appointments'
+                    ? `${t('view_your_appointments', 'View your scheduled appointments')} • ${t('upcoming', 'Upcoming')}: ${action.appointmentCount || 0}`
+                    : action.subtitle}
                 </p>
               </div>
             );

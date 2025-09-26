@@ -6,6 +6,7 @@ import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
 import ScrollToTop from './components/ScrollToTop';
 import BackButton from './components/BackButton';
+import IncomingCallNotification from './components/IncomingCallNotification';
 import { usePushNotifications } from './hooks/usePushNotifications';
 
 // Pages
@@ -19,6 +20,7 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import VideoCallPage from './pages/VideoCallPage';
 import AudioCallPage from './pages/AudioCallPage';
+import PatientVideoCall from './pages/patient/PatientVideoCall';
 import Reports from './pages/Reports';
 import MyAppointments from './pages/MyAppointments';
 import RareMedicineRequest from './pages/RareMedicineRequest';
@@ -143,6 +145,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/video-call" element={<VideoCallPage />} />
           <Route path="/audio-call" element={<AudioCallPage />} />
+          <Route path="/patient/video-call" element={<PatientVideoCall />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       );
@@ -202,6 +205,8 @@ function App() {
           </main>
           {/* Spacer no longer required; body padding via .app-has-bottomnav handles layout */}
           <BottomNavigation />
+          {/* Incoming Call Notification for Patients */}
+          <IncomingCallNotification />
         </div>
       </div>
     );

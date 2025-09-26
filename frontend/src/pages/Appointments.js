@@ -34,6 +34,38 @@ const Appointments = () => {
   const [appointmentId, setAppointmentId] = useState('');
   const [showToast, setShowToast] = useState(false);
 
+  // Auto-fill patient info from auth user or stored profile
+  useEffect(() => {
+    try {
+      if (user) {
+        // Attempt to extract name & age
+        const storedProfileRaw = localStorage.getItem('helio_patient_profile');
+        let storedProfile = null;
+        if (storedProfileRaw) {
+          try { storedProfile = JSON.parse(storedProfileRaw); } catch(_){ storedProfile = null; }
+        }
+        const derivedName = user.name || user.fullName || storedProfile?.name || storedProfile?.fullName || '';
+        const derivedAge = user.age || storedProfile?.age || '';
+        setFormData(prev => ({
+          ...prev,
+          patientName: prev.patientName || derivedName,
+            age: prev.age || derivedAge
+        }));
+      } else {
+        // Anonymous fallback: attempt previously used appointment
+        const past = JSON.parse(localStorage.getItem('helio_appointments') || '[]');
+        if (Array.isArray(past) && past.length) {
+          const last = [...past].reverse().find(a => a.patientName && a.age);
+          if (last) {
+            setFormData(prev => ({ ...prev, patientName: prev.patientName || last.patientName, age: prev.age || last.age }));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to auto-fill patient info:', e);
+    }
+  }, [user]);
+
   // Specialist field removed — specialty is derived from selected doctor
 
   // Hospital options

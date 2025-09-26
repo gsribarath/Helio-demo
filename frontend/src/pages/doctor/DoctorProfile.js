@@ -79,11 +79,11 @@ const DoctorProfile = () => {
       <div className="max-w-5xl mx-auto px-4 space-y-6">
         {/* Overview Card */}
         <div className="rx-card">
-          <div className="flex flex-wrap items-baseline gap-3 mb-3">
+          <div className="flex flex-wrap items-baseline mb-3 doctor-name-row">
             {!editing ? (
               <>
                 <h2 className="rx-card-title m-0">{profile.name}</h2>
-                <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase">{profile.specialty}</span>
+                <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase specialty-badge">{profile.specialty}</span>
               </>
             ) : (
               <div className="w-full grid sm:grid-cols-2 gap-3">

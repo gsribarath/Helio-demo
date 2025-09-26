@@ -61,11 +61,11 @@ export default function MyMedicines(){
           </div>
         )}
         {/* Action Buttons */}
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="rx-actions flex justify-center gap-3 mb-6 flex-wrap">
           <button 
             type="button" 
             onClick={() => navigate('/request-medicine')}
-            className="my-appointments-btn px-8 py-3 text-sm font-semibold text-center"
+            className="my-appointments-btn pill-compact text-center"
             title="Request medicine with prescription"
           >
             Request Medicine
@@ -73,7 +73,7 @@ export default function MyMedicines(){
           <button 
             type="button" 
             onClick={() => navigate('/emergency-request')}
-            className="emergency-btn px-8 py-3 text-sm font-semibold text-center"
+            className="emergency-btn pill-compact text-center"
             title="Emergency medicine request"
           >
             Emergency
@@ -82,7 +82,7 @@ export default function MyMedicines(){
             <button 
               type="button" 
               onClick={clearAll} 
-              className="my-appointments-btn px-8 py-3 text-sm font-semibold text-center" 
+              className="my-appointments-btn pill-compact text-center" 
               title="Clear all prescriptions"
             >
               Clear All

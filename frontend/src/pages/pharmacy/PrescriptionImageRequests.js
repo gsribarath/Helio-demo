@@ -48,6 +48,10 @@ const PrescriptionImageRequests = () => {
 
       // Normalize image URLs to absolute for rendering
       // Normalize image url and patient identifiers
+      const patientIdNameOverrides = {
+        'P001': 'Gurpreet Singh',
+        'p001': 'Gurpreet Singh'
+      };
       pendingRequests = pendingRequests.map(r => {
         const idRaw = r.patientId ?? r.id;
         let formattedId = idRaw;
@@ -64,9 +68,11 @@ const PrescriptionImageRequests = () => {
             formattedId = idRaw; // leave as-is
           }
         }
+        // If this is our demo patient P001 force the display name
+        const forcedName = patientIdNameOverrides[formattedId];
         return {
           ...r,
-          patientName: r.patientName || 'Patient',
+          patientName: forcedName || r.patientName || 'Patient',
           patientId: formattedId,
           prescriptionImageUrl: toAbsoluteUrl(r.prescriptionImageUrl)
         };

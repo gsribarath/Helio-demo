@@ -263,6 +263,170 @@ def get_patient_appointments():
         print(f"Get patient appointments error: {e}")
         return jsonify({'message': 'Internal server error'}), 500
 
+    except Exception as e:
+        print(f"Get patient appointments error: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
+
+# -------------------------------------------------------------
+# Backward compatible Appointment Routes expected by frontend
+# (POST /api/appointments, GET /api/appointments)
+# These mirror the simpler logic from the SQLAlchemy version but
+# use the new direct PostgreSQL schema (appointments_table, etc.).
+# -------------------------------------------------------------
+
+@app.route('/api/appointments', methods=['POST'])
+@jwt_required()
+def create_appointment_compat():
+    """Create an appointment (backward compatible endpoint)."""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json() or {}
+
+        doctor_id = data.get('doctor_id') or data.get('doctorId')
+        raw_dt = data.get('appointment_date') or data.get('appointmentDate')
+        symptoms = data.get('symptoms', '')
+        notes = data.get('notes', '')
+        consultation_type = data.get('consultation_type', 'video')
+        duration_minutes = int(data.get('duration_minutes', 30))
+
+        if not doctor_id or not raw_dt:
+            return jsonify({'message': 'doctor_id and appointment_date are required'}), 400
+
+        # Resolve patient id from logged in user
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection error'}), 500
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT id FROM patients_table WHERE login_id = %s", (user_id,))
+        patient_row = cursor.fetchone()
+        if not patient_row:
+            conn.close()
+            return jsonify({'message': 'Patient profile not found'}), 404
+        patient_id = patient_row['id']
+
+        # Parse incoming datetime (supports ISO like 2025-09-27T14:30:00)
+        try:
+            iso = raw_dt.replace('Z', '')
+            dt = datetime.fromisoformat(iso)
+        except Exception:
+            return jsonify({'message': 'Invalid appointment_date format'}), 400
+
+        appt_date = dt.date().isoformat()  # YYYY-MM-DD
+        appt_time = dt.time().strftime('%H:%M:%S')  # HH:MM:SS
+
+        cursor.execute(
+            """
+            INSERT INTO appointments_table 
+                (patient_id, doctor_id, appointment_date, appointment_time, symptoms, notes, status, consultation_type, duration_minutes, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, 'upcoming', %s, %s, NOW())
+            RETURNING id
+            """,
+            (patient_id, doctor_id, appt_date, appt_time, symptoms, notes, consultation_type, duration_minutes)
+        )
+        new_id = cursor.fetchone()['id']
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'message': 'Appointment created successfully',
+            'appointment_id': new_id
+        }), 201
+    except Exception as e:
+        print(f"Create appointment compat error: {e}")
+        return jsonify({'message': 'Failed to create appointment', 'error': str(e)}), 500
+
+
+@app.route('/api/appointments', methods=['GET'])
+@jwt_required()
+def list_appointments_compat():
+    """List appointments for the logged in user (patient or doctor)."""
+    try:
+        user_id = get_jwt_identity()
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection error'}), 500
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Determine role
+        cursor.execute("SELECT role FROM login_table WHERE id = %s", (user_id,))
+        user_row = cursor.fetchone()
+        role = user_row['role'] if user_row else None
+
+        # Filters (optional)
+        doctor_id = request.args.get('doctor_id')
+        date_filter = request.args.get('date')  # YYYY-MM-DD
+        status_filter = request.args.get('status')
+
+        base_query = [
+            "SELECT a.id, a.patient_id, a.doctor_id, a.appointment_date, a.appointment_time, a.symptoms, a.notes,",
+            "a.status, a.consultation_type, a.duration_minutes,",
+            "(d.first_name || ' ' || d.last_name) AS doctor_name, d.specialization,",
+            "(p.first_name || ' ' || p.last_name) AS patient_name"
+            " FROM appointments_table a",
+            " JOIN doctors_table d ON a.doctor_id = d.id",
+            " JOIN patients_table p ON a.patient_id = p.id"
+        ]
+
+        conditions = []
+        params = []
+
+        if role == 'patient':
+            cursor.execute("SELECT id FROM patients_table WHERE login_id = %s", (user_id,))
+            prow = cursor.fetchone()
+            if prow:
+                conditions.append('a.patient_id = %s')
+                params.append(prow['id'])
+        elif role == 'doctor':
+            cursor.execute("SELECT id FROM doctors_table WHERE login_id = %s", (user_id,))
+            drow = cursor.fetchone()
+            if drow:
+                conditions.append('a.doctor_id = %s')
+                params.append(drow['id'])
+
+        if doctor_id:
+            conditions.append('a.doctor_id = %s')
+            params.append(doctor_id)
+        if date_filter:
+            conditions.append('a.appointment_date = %s')
+            params.append(date_filter)
+        if status_filter:
+            conditions.append('a.status = %s')
+            params.append(status_filter)
+
+        if conditions:
+            base_query.append(' WHERE ' + ' AND '.join(conditions))
+        base_query.append(' ORDER BY a.appointment_date DESC, a.appointment_time DESC')
+
+        final_sql = ''.join(base_query)
+        cursor.execute(final_sql, tuple(params))
+        rows = cursor.fetchall()
+        conn.close()
+
+        # Normalize output similar to previous backend format
+        result = []
+        for r in rows:
+            result.append({
+                'id': r['id'],
+                'patient_name': r.get('patient_name'),
+                'doctor_name': r.get('doctor_name'),
+                'doctor_specialty': r.get('specialization'),
+                'appointment_date': f"{r['appointment_date']}T{str(r['appointment_time'])}",
+                'duration_minutes': r.get('duration_minutes'),
+                'status': r.get('status'),
+                'consultation_type': r.get('consultation_type'),
+                'symptoms': r.get('symptoms'),
+                'notes': r.get('notes')
+            })
+
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"List appointments compat error: {e}")
+        return jsonify({'message': 'Failed to fetch appointments', 'error': str(e)}), 500
+
+    except Exception as e:
+        print(f"Get patient appointments error: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
+
 @app.route('/api/patient/medicines', methods=['GET'])
 @jwt_required()
 def get_patient_medicines():

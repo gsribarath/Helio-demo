@@ -175,9 +175,15 @@ export default function MyAppointments() {
   <h1 className="text-2xl font-bold mb-4">{t('my_appointments')}</h1>
 
       <div className="ma-tabs card mb-6" role="tablist" aria-label="Appointment sections">
-        <button className={`ma-tab ${tab==='upcoming'?'active':''}`} role="tab" aria-selected={tab==='upcoming'} onClick={()=>setTab('upcoming')}>{t('upcoming')}</button>
-        <button className={`ma-tab ${tab==='past'?'active':''}`} role="tab" aria-selected={tab==='past'} onClick={()=>setTab('past')}>{t('past')}</button>
-        <button className={`ma-tab ${tab==='cancelled'?'active':''}`} role="tab" aria-selected={tab==='cancelled'} onClick={()=>setTab('cancelled')}>{t('cancelled')}</button>
+        <button className={`ma-tab ${tab==='upcoming'?'active':''}`} role="tab" aria-selected={tab==='upcoming'} onClick={()=>setTab('upcoming')}>
+          {t('upcoming')} <span className="ma-count">({upcoming.length})</span>
+        </button>
+        <button className={`ma-tab ${tab==='past'?'active':''}`} role="tab" aria-selected={tab==='past'} onClick={()=>setTab('past')}>
+          {t('past')} <span className="ma-count">({past.length})</span>
+        </button>
+        <button className={`ma-tab ${tab==='cancelled'?'active':''}`} role="tab" aria-selected={tab==='cancelled'} onClick={()=>setTab('cancelled')}>
+          {t('cancelled')} <span className="ma-count">({cancelled.length})</span>
+        </button>
       </div>
 
       <div className="ma-list">

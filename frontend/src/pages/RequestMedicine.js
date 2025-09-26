@@ -59,7 +59,9 @@ export default function RequestMedicine() {
         const fallback = {
           id: 'PR-' + Date.now(),
           patientId: user.id || 'patient-' + Date.now(),
-          patientName: user.profile?.first_name + ' ' + user.profile?.last_name || user.name || 'Patient',
+          patientName: (user.profile?.first_name && user.profile?.last_name)
+            ? `${user.profile.first_name} ${user.profile.last_name}`
+            : (user.name || (user.username === 'p001' ? 'Gurpreet Singh' : 'Patient')),
           prescriptionImageUrl: absoluteUrl,
           notes: '',
           status: 'pending',

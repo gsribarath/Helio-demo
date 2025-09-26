@@ -157,29 +157,43 @@ const Medicines = () => {
         }
       });
 
-      // Add medicines from shared inventory that don't exist in merged inventory
+      // Sync medicines from shared inventory (add new OR update existing stock/expiry)
       sharedInventory.forEach(sharedMed => {
-        // Check if this medicine already exists in merged inventory (not just dummy medicines)
-        const existsInMerged = mergedMedicines.some(mergedMed => 
-          mergedMed.name.toLowerCase().trim() === sharedMed.name.toLowerCase().trim()
-        );
-        
-        if (!existsInMerged) {
-          // Add new medicine with sequential ID
-          maxId++;
-          const newMedicine = {
-            id: `Ph${maxId}`,
-            name: sharedMed.name,
-            generic_name: sharedMed.generic_name || sharedMed.name,
-            manufacturer: sharedMed.manufacturer || 'Unknown',
-            price: sharedMed.price || 0,
-            stock_quantity: sharedMed.stock_quantity || sharedMed.quantity || 0,
-            expiry_date: sharedMed.expiry_date || '2026-12-31',
-            category: sharedMed.category || 'General',
-            description: sharedMed.description || 'Medicine added from pharmacy',
-            requires_prescription: sharedMed.requires_prescription || false
-          };
-          mergedMedicines.push(newMedicine);
+        const normalizedName = (sharedMed.name || '').toLowerCase().trim();
+        if(!normalizedName) return; // skip invalid
+        const idx = mergedMedicines.findIndex(m => (m.name||'').toLowerCase().trim() === normalizedName);
+        const stockValue = sharedMed.stock_quantity ?? sharedMed.stock ?? sharedMed.quantity ?? 0;
+        const expiryValue = sharedMed.expiry_date || sharedMed.expiry || '2026-12-31';
+
+        if (idx === -1) {
+          // New medicine -> append with next sequential id
+            maxId++;
+            mergedMedicines.push({
+              id: `Ph${maxId}`,
+              name: sharedMed.name,
+              generic_name: sharedMed.generic_name || sharedMed.name,
+              manufacturer: sharedMed.manufacturer || 'Unknown',
+              price: sharedMed.price || 0,
+              stock_quantity: stockValue,
+              expiry_date: expiryValue,
+              category: sharedMed.category || 'General',
+              description: sharedMed.description || 'Medicine added from pharmacy',
+              requires_prescription: sharedMed.requires_prescription || false
+            });
+        } else {
+          // Existing -> update stock / expiry if changed
+          const existing = mergedMedicines[idx];
+          const updated = { ...existing };
+          let changed = false;
+          if (typeof stockValue === 'number' && stockValue >= 0 && stockValue !== existing.stock_quantity) {
+            updated.stock_quantity = stockValue;
+            changed = true;
+          }
+          if (expiryValue && expiryValue !== existing.expiry_date) {
+            updated.expiry_date = expiryValue;
+            changed = true;
+          }
+          if (changed) mergedMedicines[idx] = updated;
         }
       });
 

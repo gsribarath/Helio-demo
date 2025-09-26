@@ -242,6 +242,82 @@ def get_patient_appointments():
         }
     ]}), 200
 
+# Standard appointments endpoints expected by frontend
+@app.route('/api/appointments', methods=['POST'])
+@jwt_required()
+def create_appointment():
+    """Create an appointment (demo mode)"""
+    try:
+        data = request.get_json() or {}
+        user_id = get_jwt_identity()
+        
+        # Generate a demo appointment ID
+        appointment_id = f"APT{len(PRESCRIPTION_REQUESTS) + 1001}"
+        
+        # In demo mode, we just return success without storing
+        return jsonify({
+            'message': 'Appointment created successfully',
+            'appointment_id': appointment_id
+        }), 201
+        
+    except Exception as e:
+        print(f"Create appointment error: {e}")
+        return jsonify({'message': 'Failed to create appointment', 'error': str(e)}), 500
+
+@app.route('/api/appointments', methods=['GET'])
+@jwt_required()
+def get_appointments():
+    """Get appointments (demo mode)"""
+    try:
+        user_id = get_jwt_identity()
+        
+        # Find user role
+        user_role = None
+        for username, user_data in DEMO_USERS.items():
+            if user_data['id'] == user_id:
+                user_role = user_data['role']
+                break
+        
+        # Return demo appointments based on role
+        if user_role == 'patient':
+            appointments = [
+                {
+                    'id': 1,
+                    'patient_name': 'John Doe',
+                    'doctor_name': 'Dr. Rajesh Kumar',
+                    'doctor_specialty': 'Cardiology',
+                    'appointment_date': '2024-12-20T10:00:00',
+                    'duration_minutes': 30,
+                    'status': 'scheduled',
+                    'consultation_type': 'video',
+                    'symptoms': 'Chest pain',
+                    'notes': ''
+                }
+            ]
+        elif user_role == 'doctor':
+            appointments = [
+                {
+                    'id': 1,
+                    'patient_name': 'John Doe',
+                    'doctor_name': 'Dr. Rajesh Kumar',
+                    'doctor_specialty': 'Cardiology',
+                    'appointment_date': '2024-12-20T10:00:00',
+                    'duration_minutes': 30,
+                    'status': 'scheduled',
+                    'consultation_type': 'video',
+                    'symptoms': 'Chest pain',
+                    'notes': ''
+                }
+            ]
+        else:
+            appointments = []
+        
+        return jsonify(appointments), 200
+        
+    except Exception as e:
+        print(f"Get appointments error: {e}")
+        return jsonify({'message': 'Failed to fetch appointments', 'error': str(e)}), 500
+
 @app.route('/api/patient/medicines', methods=['GET'])
 @jwt_required()
 def get_patient_medicines():

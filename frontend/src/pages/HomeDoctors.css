@@ -31,3 +31,33 @@
   .detail-row{gap:8px}
   .detail-text{font-size:13px}
 }
+
+/* Appointment notification badge */
+.notif-badge{
+  position:relative;
+  margin-left:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#ffffff;
+  color:#1d4ed8; /* blue-700 */
+  font-size:11px;
+  font-weight:700;
+  border-radius:999px;
+  padding:0 8px;
+  min-width:24px;
+  height:24px;
+  border:1px solid rgba(59,130,246,0.25);
+  box-shadow:0 2px 4px rgba(0,0,0,0.08), inset 0 0 3px rgba(59,130,246,0.3);
+  transform-origin:center;
+  transition:background .25s,color .25s;
+}
+.notif-badge.pop{
+  animation:badge-pop .55s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes badge-pop{
+  0%{transform:scale(.4); opacity:0}
+  40%{transform:scale(1.25); opacity:1}
+  65%{transform:scale(.9)}
+  100%{transform:scale(1); opacity:1}
+}

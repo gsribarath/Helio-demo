@@ -23,6 +23,36 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [appointmentId, setAppointmentId] = useState('');
 
+  // Auto-fill patient name & age from user context or stored profile / last appointment
+  useEffect(() => {
+    try {
+      if (user) {
+        const storedProfileRaw = localStorage.getItem('helio_patient_profile');
+        let storedProfile = null;
+        if (storedProfileRaw) {
+          try { storedProfile = JSON.parse(storedProfileRaw); } catch(_) { storedProfile = null; }
+        }
+        const derivedName = user.name || user.fullName || storedProfile?.name || storedProfile?.fullName || '';
+        const derivedAge = user.age || storedProfile?.age || '';
+        setFormData(prev => ({
+          ...prev,
+          patientName: prev.patientName || derivedName,
+          age: prev.age || derivedAge
+        }));
+      } else {
+        const past = JSON.parse(localStorage.getItem('helio_appointments') || '[]');
+        if (Array.isArray(past) && past.length) {
+          const last = [...past].reverse().find(a => a.patientName && a.age);
+          if (last) {
+            setFormData(prev => ({ ...prev, patientName: prev.patientName || last.patientName, age: prev.age || last.age }));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to auto-fill patient info (modal):', e);
+    }
+  }, [user, isOpen]);
+
   // Don't render anything if modal is not open
   if (!isOpen) {
     return null;

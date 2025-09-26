@@ -241,9 +241,7 @@ const DoctorPatientInfo = () => {
 
   return (
   <div className="max-w-7xl mx-auto py-8 px-2 sm:px-4 pb-28">
-      <button onClick={() => navigate(-1)} className="btn-blue mb-6" aria-label="Go Back" style={{display:'inline-flex',alignItems:'center',gap:'8px'}}>
-        <FaArrowLeft className="mr-2"/> Back
-      </button>
+      {/* Back button removed here because a global back control already exists in header */}
 
       {/* Header */}
       <div className="bg-white rounded-lg border border-gray-200 p-5 sm:p-6 mb-8 shadow-sm">

@@ -5,6 +5,7 @@
 .ma-tabs:focus-within { outline:2px solid var(--primary-color); outline-offset:2px; }
 .ma-tab { background:transparent; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; color:var(--text-muted); }
 .ma-tab.active { background:var(--bg-primary); color:var(--text-primary); box-shadow:var(--shadow); }
+.ma-count { font-size:12px; opacity:0.8; margin-left:4px; font-weight:600; }
 .ma-list { display:flex; flex-direction:column; gap:18px; }
 .ma-card { display:flex; gap:18px; background:var(--bg-primary); border:1px solid var(--border-light); border-radius:12px; padding:18px; align-items:flex-start; }
 .ma-avatar { width:56px; height:56px; border-radius:999px; background:linear-gradient(135deg,var(--primary-color),var(--primary-dark)); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; }

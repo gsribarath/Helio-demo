@@ -407,7 +407,7 @@ const Settings = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('quick_actions')}</h3>
             
             <div className="space-y-3">
-              <button className="w-full btn btn-outline flex items-center justify-center gap-2">
+              <button className="w-full pill-link-button is-outline flex items-center justify-center">
                 <FaQuestionCircle />
                 {t('help_support')}
               </button>
@@ -420,7 +420,8 @@ const Settings = () => {
             <p className="text-sm text-blue-800 mb-3">
               {t('privacy_copy')}
             </p>
-            <button className="text-sm text-blue-600 font-medium hover:underline">
+            <button className="pill-link-button flex items-center">
+              <span className="pulse-dot" aria-hidden="true"></span>
               {t('read_privacy_policy')}
             </button>
           </div>

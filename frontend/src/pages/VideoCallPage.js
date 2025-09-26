@@ -302,18 +302,48 @@ const VideoCallPage = () => {
           </header>
 
           <div className={`vc-video-stage ${showControls ? 'show-controls' : ''}`} onMouseMove={() => setShowControls(true)}>
-            <div className="vc-video-dummy">
-              <div className="vc-dummy-overlay">
-                <div className="vc-dummy-avatar">{doctor.name?.charAt(0)}</div>
-                <div className="vc-dummy-info">
-                  <div className="vc-dummy-name"><TransText text={doctor.name} /></div>
-                  <div className="vc-dummy-specialty"><TransText text={doctor.specialty} /></div>
-                  <div className="vc-dummy-status">{ phase === 'active' ? (isAudioOnly ? 'Audio Only (network)' : t('video') + ' ' + t('call','Call') + ' Active') : 'Ringing...' }</div>
+            {/* Show patient's video in center when available and call is active */}
+            {phase === 'active' && remoteStream && remoteStream.getVideoTracks().length > 0 && remoteStream.getVideoTracks()[0].enabled && !isAudioOnly ? (
+              <video
+                ref={(el) => { if (el && remoteStream && el.srcObject !== remoteStream) el.srcObject = remoteStream; }}
+                autoPlay
+                playsInline
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '12px',
+                  background: '#000'
+                }}
+                aria-label="Patient's video feed"
+              />
+            ) : (
+              <div className="vc-video-dummy">
+                <div className="vc-dummy-overlay">
+                  <div className="vc-dummy-avatar">{phase === 'active' ? (patient?.name?.charAt(0) || 'P') : doctor.name?.charAt(0)}</div>
+                  <div className="vc-dummy-info">
+                    <div className="vc-dummy-name">
+                      <TransText text={phase === 'active' ? (patient?.name || 'Patient') : doctor.name} />
+                    </div>
+                    <div className="vc-dummy-specialty">
+                      <TransText text={phase === 'active' ? 'Patient' : doctor.specialty} />
+                    </div>
+                    <div className="vc-dummy-status">
+                      {phase === 'active' ? (
+                        isAudioOnly ? 'Audio Only (network)' : 
+                        remoteStream ? (
+                          remoteStream.getVideoTracks().length > 0 && remoteStream.getVideoTracks()[0].enabled ? 
+                          'Connecting video...' : 'Patient camera is off'
+                        ) : 'No video stream'
+                      ) : 'Ringing...'}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="vc-mini-video">
+              {/* Doctor's own camera feed in mini view */}
               {cameraOn ? (
                 localStream ? (
                   <video
@@ -322,18 +352,29 @@ const VideoCallPage = () => {
                     muted
                     playsInline
                     style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:8,background:'#000'}}
-                    aria-label={t('your_camera_view','Your camera view')}
+                    aria-label="Doctor's camera view"
                   />
                 ) : (
                   <div className="mini-on" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-                    <div className="mini-avatar"><TransText text={t('you', 'You')} /></div>
-                    <div className="mini-txt" style={{fontSize:12,opacity:0.8}}>{t('starting_camera','Starting camera...')}</div>
+                    <div className="mini-avatar">{doctor.name?.charAt(0) || 'D'}</div>
+                    <div className="mini-txt" style={{fontSize:12,opacity:0.8}}>Starting camera...</div>
                   </div>
                 )
               ) : (
-                <div className="mini-off"><FaVideoSlash /> {t('camera_off', 'Camera Off')}</div>
+                <div className="mini-off"><FaVideoSlash /> Camera Off</div>
               )}
             </div>
+
+            {/* Debug info for video streams */}
+            {phase === 'active' && (
+              <div style={{position:'absolute', top:40, left:8, background:'rgba(0,0,0,0.7)', color:'#fff', padding:'4px 8px', borderRadius:4, fontSize:10, lineHeight:1.3}}>
+                Local: {localStream ? `${localStream.getVideoTracks().length}v` : 'none'} | 
+                Remote: {remoteStream ? `${remoteStream.getVideoTracks().length}v` : 'none'}
+                {remoteStream && remoteStream.getVideoTracks().length > 0 && (
+                  <div>Patient cam: {remoteStream.getVideoTracks()[0].enabled ? 'ON' : 'OFF'}</div>
+                )}
+              </div>
+            )}
 
             {/* Hidden actual media elements (design unchanged) */}
             <video
