@@ -8,6 +8,9 @@ export default function RequestMedicine() {
   const [uploading, setUploading] = useState(false);
   const [recentRequest, setRecentRequest] = useState(null);
   const [recentStatus, setRecentStatus] = useState('pending');
+  const [currentUser, setCurrentUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+  });
 
   const validateFile = (file) => {
     const allowed = ['image/jpeg','image/jpg','image/png','image/gif'];
@@ -85,6 +88,7 @@ export default function RequestMedicine() {
   useEffect(() => {
     const loadRecent = async () => {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
+      setCurrentUser(user);
       const backend = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace(/\/api$/,'');
       const toAbs = (url) => (/^https?:\/\//i.test(url) ? url : `${backend}${url?.startsWith('/') ? url : `/${url}`}`);
       // Start from cached last request if available
@@ -120,6 +124,18 @@ export default function RequestMedicine() {
       }
     };
     loadRecent();
+    // Listen for pharmacist updates (status changes) via localStorage
+    const onStorage = (e) => {
+      if (e.key === 'helio_last_prescription_request' && e.newValue) {
+        try {
+          const last = JSON.parse(e.newValue);
+          setRecentRequest(last);
+          setRecentStatus(last.status || 'pending');
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   return (
@@ -131,6 +147,15 @@ export default function RequestMedicine() {
 
       <main className="px-3 sm:px-4 max-w-3xl mx-auto">
         <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+          {/* Patient info */}
+          {currentUser && (currentUser.name || currentUser.id) && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-sm text-blue-900">
+                <div className="font-semibold">Submitting as:</div>
+                <div className="mt-1"><span className="font-medium">{currentUser.profile?.first_name && currentUser.profile?.last_name ? `${currentUser.profile.first_name} ${currentUser.profile.last_name}` : (currentUser.name || 'Patient')}</span> <span className="text-blue-800">({currentUser.id || 'N/A'})</span></div>
+              </div>
+            </div>
+          )}
           {/* Success inline hint after submit (optional) */}
           {/* ... */}
           <div>

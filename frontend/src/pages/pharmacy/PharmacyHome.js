@@ -95,28 +95,29 @@ const PharmacyHome = () => {
       )}
 
       {requests.length > 0 && (
-        <div className="container mx-auto px-6">
-          <div className="overflow-x-auto bg-white border rounded-lg shadow-sm">
-            <table className="w-full pharmacy-table">
-              <thead>
-                <tr>
-                  <th className="text-left">Patient Name</th>
-                  <th className="text-left">Patient ID</th>
-                  <th className="text-left">Requested Date</th>
-                  <th className="text-left">Requested Medicine Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req) => (
-                  <tr key={req.id}>
-                    <td>{req.patientName || '-'}</td>
-                    <td>{req.patientId || '-'}</td>
-                    <td>{new Date(req.date).toLocaleString()}</td>
-                    <td>{(req.medicines || []).map(m=>m.name).join(', ')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="space-y-4">
+            {requests.map((req) => (
+              <div key={req.id} className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-4 max-w-2xl mx-auto">
+                <div className="flex flex-col gap-2 mb-2">
+                  <span className="text-lg font-bold text-gray-900">{req.patientName || 'Emergency Patient'}</span>
+                  <span className="text-sm text-gray-500">ID: {req.patientId || 'N/A'}</span>
+                  <span className="text-sm text-gray-500">{new Date(req.date).toLocaleString()}</span>
+                  <span className={`text-base font-semibold ${req.status === 'approved' ? 'status-green' : 'status-blue'}`}>{req.status === 'approved' ? 'ACCEPTED' : 'PENDING'}</span>
+                  <span className="text-sm text-gray-700">Medicines: {(req.medicines || []).map(m=>m.name).join(', ') || '-'}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                  <button
+                    onClick={() => updateStatus(req.id, 'approved')}
+                    className="flex-1 btn btn-green btn-block rounded-xl text-base"
+                    disabled={req.status === 'approved'}
+                    aria-label="Accept request"
+                  >
+                    {req.status === 'approved' ? 'Accepted' : 'Accept'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

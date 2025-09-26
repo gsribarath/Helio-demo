@@ -190,43 +190,53 @@ const EmergencyRequest = () => {
                   type="text"
                   value={searchQuery}
                   onChange={handleInputChange}
-                  placeholder="Search and select medicine from list..."
-                  className={`w-full px-4 py-3 border rounded-none focus:ring-2 focus:ring-red-500 transition-colors border-gray-400 focus:border-red-500`}
+                  placeholder="Search medicines..."
+                  className="search-input"
                   disabled={loading}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
               
               <p className="mt-1 text-xs text-gray-500">
                 Tap a result to add it. You can add multiple medicines; duplicates increase quantity.
               </p>
               {/* Inventory table reused style: simple text-only table filtered by search */}
-              <div className="mt-4 bg-white border-2 border-gray-500 rounded-lg overflow-hidden">
+              <div className="mt-4 medicine-table-card w-full sm:w-11/12 md:w-4/5 mx-auto">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm border-collapse border border-gray-500">
-                    <thead className="bg-gray-50">
+                  <table className="medicine-table">
+                    <thead>
                       <tr>
-                        <th className="text-left px-4 py-2 font-semibold text-gray-700 border border-gray-500">Name</th>
-                        <th className="text-left px-4 py-2 font-semibold text-gray-700 border border-gray-500">Category</th>
-                        <th className="text-left px-4 py-2 font-semibold text-gray-700 border border-gray-500">Action</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredMedicines.length === 0 ? (
                         <tr>
-                          <td colSpan={3} className="px-4 py-4 text-center text-gray-500 border border-gray-400">No medicines found</td>
+                          <td colSpan={3} className="text-center text-gray-500">No medicines found</td>
                         </tr>
                       ) : (
                         filteredMedicines.map((medicine) => {
                           const already = items.find(i => i.name === medicine.name);
                           return (
-                            <tr key={medicine.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-2 text-gray-900 border border-gray-400">{medicine.name}</td>
-                              <td className="px-4 py-2 text-gray-600 border border-gray-400">{medicine.category}</td>
-                              <td className="px-4 py-2 border border-gray-400">
+                            <tr key={medicine.id}>
+                              <td className="text-gray-900">{medicine.name}</td>
+                              <td className="text-gray-600">{medicine.category}</td>
+                              <td>
                                 <button
                                   type="button"
                                   onClick={() => handleMedicineSelect(medicine)}
-                                  className={`text-sm px-3 py-1 rounded border transition-colors ${already ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700' : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'}`}
+                                  className="btn-add"
                                   title={already ? 'Added (click to add again)' : 'Add to request'}
                                 >
                                   {already ? 'Add again' : 'Add'}
@@ -317,26 +327,29 @@ const EmergencyRequest = () => {
 
         {/* Recently requested card (mobile responsive) */}
         {recentRequest && (
-          <div className="mt-6">
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
-                  <h4 className="text-base font-semibold text-gray-900">Last Emergency Request</h4>
-                  <p className="text-xs text-gray-500">{new Date(recentRequest.date).toLocaleString()}</p>
-                </div>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full border border-red-500 text-red-600 bg-red-50 self-start sm:self-auto">EMERGENCY</span>
+          <div className="emergency-request-card">
+            <div className="card-header">
+              <div>
+                <h4 className="card-title">Last Emergency Request</h4>
+                <p className="card-date">{new Date(recentRequest.date).toLocaleString()}</p>
               </div>
-              <div className="mt-3 text-sm text-gray-800">
-                <div><strong>Patient:</strong> {recentRequest.patientName} ({recentRequest.patientId})</div>
-                <div className="mt-2">
-                  <strong>Medicines:</strong>
-                  <ul className="mt-1 list-disc list-inside space-y-1">
-                    {(recentRequest.medicines || []).map((m, i) => (
-                      <li key={i}>{m.name}{m.qty ? ` (x${m.qty})` : ''}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              <span className={`status-badge ${recentRequest.status === 'approved' ? 'status-accepted' : 'status-pending'}`}>
+                {recentRequest.status === 'approved' ? 'ACCEPTED' : 'PENDING'}
+              </span>
+            </div>
+            
+            <div className="patient-info">
+              <div className="patient-name">Patient: {recentRequest.patientName}</div>
+              <div className="patient-id">ID: {recentRequest.patientId}</div>
+            </div>
+            
+            <div className="medicines-list">
+              <div className="medicines-title">Medicines:</div>
+              <ul>
+                {(recentRequest.medicines || []).map((m, i) => (
+                  <li key={i}>{m.name}{m.qty ? ` (x${m.qty})` : ''}</li>
+                ))}
+              </ul>
             </div>
           </div>
         )}

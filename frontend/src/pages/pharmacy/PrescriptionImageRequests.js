@@ -109,6 +109,18 @@ const PrescriptionImageRequests = () => {
         )
       );
       
+      // Also update patient's last request cache for immediate UI reflection
+      try {
+        const lastStr = localStorage.getItem('helio_last_prescription_request');
+        if (lastStr) {
+          const last = JSON.parse(lastStr);
+          if (last.id === requestId) {
+            last.status = newStatus;
+            last.processedAt = new Date().toISOString();
+            localStorage.setItem('helio_last_prescription_request', JSON.stringify(last));
+          }
+        }
+      } catch {}
       const action = newStatus === 'approved' ? 'approved' : 'rejected';
       alert(`Prescription request has been ${action} successfully! Patient will be notified.`);
     } catch (error) {
