@@ -311,20 +311,20 @@ const EmergencyRequest = () => {
                             type="button" 
                             onClick={() => updateQuantity(idx, (item.qty || 1) - 1)}
                             disabled={item.qty <= 1}
-                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300 rounded"
+                            className="qty-btn"
                           >
                             -
                           </button>
-                          <span className="text-sm font-medium text-gray-800 min-w-[2ch] text-center">{item.qty || 1}</span>
+                          <span className="qty-display">{item.qty || 1}</span>
                           <button 
                             type="button" 
                             onClick={() => updateQuantity(idx, (item.qty || 1) + 1)}
-                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 border border-gray-300 rounded"
+                            className="qty-btn"
                           >
                             +
                           </button>
                         </div>
-                        <button type="button" onClick={() => removeItem(idx)} className="text-red-600 text-sm hover:underline ml-2">Remove</button>
+                        <button type="button" onClick={() => removeItem(idx)} className="remove-btn">Remove</button>
                       </div>
                     </li>
                   ))}

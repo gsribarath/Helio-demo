@@ -1,4 +1,8 @@
-.ma-tabs { display:flex; gap:12px; padding:8px; }
+.ma-tabs { display:flex; gap:12px; padding:8px; align-items:center; }
+.ma-tabs.card { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; }
+.ma-tabs.card::-webkit-scrollbar { display:none; }
+.ma-tabs { border-radius:20px; }
+.ma-tabs:focus-within { outline:2px solid var(--primary-color); outline-offset:2px; }
 .ma-tab { background:transparent; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; color:var(--text-muted); }
 .ma-tab.active { background:var(--bg-primary); color:var(--text-primary); box-shadow:var(--shadow); }
 .ma-list { display:flex; flex-direction:column; gap:18px; }
@@ -18,4 +22,12 @@
   .ma-card{flex-direction:column}
   .ma-meta{flex-direction:row;flex-wrap:wrap;gap:12px}
   .ma-right{margin-left:0;align-self:flex-end}
+  /* Tabs: full-width pill, evenly spaced */
+  .ma-tabs { gap:8px; padding:8px 10px; justify-content:space-between; width:100%; }
+  .ma-tab { flex:1 0 auto; padding:10px 0; font-size:14px; text-align:center; white-space:nowrap; }
+}
+
+@media (max-width:480px){
+  .ma-tabs { gap:6px; padding:6px 8px; }
+  .ma-tab { padding:9px 0; font-size:13px; }
 }

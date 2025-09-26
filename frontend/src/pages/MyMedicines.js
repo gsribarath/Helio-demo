@@ -41,11 +41,18 @@ export default function MyMedicines(){
 
   return (
     <div className="min-h-screen bg-gray-50 pb-40">
-      <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12 mb-10 text-center px-4 shadow">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3">My Prescribed Medicines</h1>
-        <p className="text-blue-100 text-sm md:text-base max-w-2xl mx-auto">A consolidated table of all medicines prescribed to you.</p>
-      </header>
-      <main className="px-4 max-w-7xl mx-auto">
+      {/* Static Back Button and Page Title */}
+      <div className="page-header-with-back">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="btn-blue flex items-center gap-2"
+        >
+          <span>←</span> Back
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">My Prescribed Medicines</h1>
+      </div>
+      
+      <main className="px-4 max-w-7xl mx-auto pt-6">
         {loading && <div className="py-24 text-center text-gray-500">Loading prescriptions...</div>}
         {!loading && records.length===0 && (
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-14 text-center">
@@ -84,62 +91,54 @@ export default function MyMedicines(){
         </div>
 
         {records.length>0 && (
-          <>
-            <style>{`
-              /* Add strong black separator line between prescription blocks */
-              .rx-card { border:none; border-radius:0; background:transparent; padding:0 0 20px 0; }
-              .rx-card:not(:first-child){ border-top:2px solid #000; margin-top:0.1cm; padding-top:20px; }
-              .rx-inner-table { border-collapse: collapse; }
-              .rx-inner-table th, .rx-inner-table td { border:1px solid #1e293b !important; }
-              .rx-inner-table th { background:#f1f5f9; font-size:12px; letter-spacing:.5px; }
-              .rx-inner-table tbody tr:nth-child(even){ background:#f8fafc; }
-              .rx-inner-table tbody tr:hover { background:#eef2ff; }
-            `}</style>
-            <div className="flex flex-col" style={{ gap: '0.1cm' }}>
-              {records.map(rec => {
-                const count = rec.medicines?.length || 0; // retained for empty table fallback
-                return (
-                  <div key={rec.id} className="rx-card p-0 overflow-hidden">
-                    <div className="text-left py-5 px-6 bg-white border-b border-gray-200">
-                      <h2 className="text-xl font-bold text-gray-900 mb-2">{rec.doctorName}</h2>
-                      <p className="text-gray-500 text-xs mb-2">{new Date(rec.createdAt).toLocaleString()}</p>
-                      <p className="text-indigo-600 text-sm font-semibold">Prescription ID: {rec.id}</p>
-                    </div>
-
-                    <div className="p-6 bg-gray-50">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm bg-white rx-inner-table">
-                          <thead>
-                            <tr className="text-gray-800">
-                              <th className="px-3 py-2 text-left font-semibold">Medicine</th>
-                              <th className="px-3 py-2 text-left font-semibold">Dosage</th>
-                              <th className="px-3 py-2 text-center font-semibold">Quantity</th>
-                              <th className="px-3 py-2 text-left font-semibold">Expiry</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(rec.medicines||[]).map(m => (
-                              <tr key={m.id+rec.id}>
-                                <td className="px-3 py-2 align-top font-medium text-gray-800 min-w-[140px]">{m.name}</td>
-                                <td className="px-3 py-2 align-top text-gray-700 text-[13px]">{m.dosage || '-'}</td>
-                                <td className="px-3 py-2 align-top text-center font-semibold">x{m.qty || 1}</td>
-                                <td className="px-3 py-2 align-top text-gray-700 text-[13px] whitespace-nowrap">{m.expiry || '—'}</td>
-                              </tr>
-                            ))}
-                            {count===0 && (
-                              <tr>
-                                <td colSpan={4} className="px-3 py-6 text-center text-gray-500 text-sm">No medicines prescribed</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+          <div className="space-y-6">
+            {records.map(rec => {
+              const count = rec.medicines?.length || 0;
+              return (
+                <div key={rec.id} className="rx-card">
+                  <div className="rx-card-header">
+                    <div>
+                      <h2 className="rx-card-title">{rec.doctorName}</h2>
+                      <div className="rx-card-meta">
+                        {new Date(rec.createdAt).toLocaleString()}
+                      </div>
+                      <div className="rx-card-meta text-blue-600 font-semibold mt-1">
+                        Prescription ID: {rec.id}
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr>
+                          <th className="text-left">Medicine</th>
+                          <th className="text-left">Dosage</th>
+                          <th className="text-center">Quantity</th>
+                          <th className="text-left">Expiry</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(rec.medicines||[]).map((m, index) => (
+                          <tr key={m.id+rec.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="font-medium text-gray-800">{m.name}</td>
+                            <td className="text-gray-700">{m.dosage || '-'}</td>
+                            <td className="text-center font-semibold text-blue-600">x{m.qty || 1}</td>
+                            <td className="text-gray-700 whitespace-nowrap">{m.expiry || '—'}</td>
+                          </tr>
+                        ))}
+                        {count===0 && (
+                          <tr>
+                            <td colSpan={4} className="text-center text-gray-500 py-8">No medicines prescribed</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </main>
 

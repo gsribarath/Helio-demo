@@ -1,21 +1,20 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Reusable Back button using existing CSS classes: .btn-blue and .top-left-actions
+// Static back button bar (no absolute/fixed positioning)
+// Places a single back button in normal document flow at page top (under any nav)
 export default function BackButton(){
   const navigate = useNavigate();
   const { user } = useAuth();
-  const location = useLocation();
 
-  const fallback = (() => {
-    if(user?.role === 'doctor') return '/doctor';
-    if(user?.role === 'pharmacist') return '/pharmacy';
-    return '/';
-  })();
+  const fallback = user?.role === 'doctor'
+    ? '/doctor'
+    : user?.role === 'pharmacist'
+      ? '/pharmacy'
+      : '/';
 
   const goBack = () => {
-    // If there's no history to go back to, navigate to role home
     if (window.history.length <= 1) {
       navigate(fallback, { replace: true });
     } else {
@@ -23,14 +22,16 @@ export default function BackButton(){
     }
   };
 
-  // Render within a positioned wrapper so .top-left-actions anchors properly
   return (
-    <div className="hero-header" aria-hidden={false} aria-label="Back navigation area">
-      <div className="top-left-actions">
-        <button type="button" className="btn-blue" onClick={goBack} aria-label="Back">
-          {'<- Back'}
-        </button>
-      </div>
+    <div className="back-button-bar" role="navigation" aria-label="Back navigation">
+      <button
+        type="button"
+        className="btn-blue"
+        onClick={goBack}
+        aria-label="Go back"
+      >
+        ← Back
+      </button>
     </div>
   );
 }

@@ -185,7 +185,7 @@ function App() {
 
   // For patients, show the existing interface with navigation
   if (user.role === 'patient') {
-    const patientMain = new Set(['/', '/home', '/medicines', '/availability', '/profile', '/settings']);
+    const patientMain = new Set(['/', '/home', '/medicines', '/my-medicines', '/availability', '/profile', '/settings']);
     const showBack = !patientMain.has(location.pathname) && !location.pathname.startsWith('/video-call') && !location.pathname.startsWith('/audio-call');
     return (
       <div className="App min-h-screen bg-gray-50">
