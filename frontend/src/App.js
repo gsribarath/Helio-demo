@@ -6,11 +6,7 @@ import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
 import ScrollToTop from './components/ScrollToTop';
 import BackButton from './components/BackButton';
-<<<<<<< HEAD
-import { useAuth } from './context/AuthContext';
-=======
 import { usePushNotifications } from './hooks/usePushNotifications';
->>>>>>> 4a629f7e88f974d6c01589cb27f45f5dffb206a7
 
 // Pages
 import Home from './pages/Home';
@@ -49,11 +45,9 @@ import DoctorConsultation from './pages/doctor/DoctorConsultation';
 function App() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const { user, login, logout, loading, isAuthenticated } = useAuth();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   
-<<<<<<< HEAD
-  // AuthProvider handles persisted session; no local re-parse here.
-=======
   // Initialize push notifications
   usePushNotifications();
   
@@ -75,7 +69,6 @@ function App() {
     }
     setLoading(false);
   }, []);
->>>>>>> 4a629f7e88f974d6c01589cb27f45f5dffb206a7
 
   // Set document direction based on language
   useEffect(() => {
@@ -92,14 +85,18 @@ function App() {
 
   // Handle login
   const handleLogin = (userData) => {
-    // Delegate to AuthContext login
-    login(userData.token || 'demo.token', userData);
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+    if (userData.token) {
+      localStorage.setItem('token', userData.token);
+    }
   };
 
   // Handle logout
   const handleLogout = () => {
-    // Only explicit logout clears session
-    logout();
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   // Show loading spinner
@@ -221,9 +218,7 @@ function App() {
             {(() => {
               const doctorMain = new Set(['/doctor', '/doctor/my-appointments', '/doctor/patients', '/doctor/profile', '/doctor/settings']);
               const isMain = doctorMain.has(location.pathname);
-              // Hide global BackButton on call pages to avoid overlap with call UI
-              const isCallPage = location.pathname.startsWith('/video-call') || location.pathname.startsWith('/audio-call');
-              return (!isMain && !isCallPage) && <BackButton />;
+              return !isMain && <BackButton />;
             })()}
             {getRoleBasedRoutes()}
           </main>

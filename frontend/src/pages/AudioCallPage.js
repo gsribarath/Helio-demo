@@ -20,9 +20,7 @@ const AudioCallPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const persisted = (()=>{ try { return JSON.parse(localStorage.getItem('helio_call_context')||'null'); } catch { return null; } })();
-  const routeState = location.state || {};
-  const { doctor, patient, callType, callSessionId, appointmentId } = Object.keys(routeState).length ? routeState : (persisted || {});
+  const { doctor, patient, callType, callSessionId, appointmentId } = location.state || {};
   const [phase, setPhase] = useState('ringing'); // ringing | active | ended | declined
 
   // Call states
@@ -36,10 +34,9 @@ const AudioCallPage = () => {
 
   useEffect(() => {
     if (!doctor || !patient) { navigate('/'); return; }
-    try { localStorage.setItem('helio_call_context', JSON.stringify({ doctor, patient, callType, callSessionId, appointmentId })); } catch {}
     const autoTimer = setTimeout(()=> { setPhase('active'); setCallStatus('connected'); }, 1500);
     return ()=> clearTimeout(autoTimer);
-  }, [doctor, patient, callType, callSessionId, appointmentId, navigate]);
+  }, [doctor, patient, navigate]);
 
   useEffect(() => {
     if (phase !== 'active' || !isCallActive) return;
@@ -56,7 +53,6 @@ const AudioCallPage = () => {
       const updated = arr.map(a=> a.id===appointmentId ? { ...a, callType:null, callSessionId:null } : a);
       localStorage.setItem(key, JSON.stringify(updated));
     } catch(e){ console.error('Failed to cleanup call session (audio)', e); }
-    try { localStorage.removeItem('helio_call_context'); } catch {}
   };
 
   const formatTime = (seconds) => {
