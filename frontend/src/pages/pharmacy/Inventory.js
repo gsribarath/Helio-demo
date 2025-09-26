@@ -30,26 +30,20 @@ const Inventory = () => {
 
   useEffect(()=>{
     const key='helio_inventory';
-    const raw = localStorage.getItem(key);
-    if(raw){
-      try { 
-        const parsed = JSON.parse(raw);
-        const migrated = Array.isArray(parsed) ? parsed.map(it => it.updated ? it : { ...it, updated: new Date().toISOString() }) : [];
-        // Strip supplier if older records have it
-        const cleaned = migrated.map(it => { const { supplier, ...rest } = it; return rest; });
-        setItems(cleaned);
-        localStorage.setItem(key, JSON.stringify(cleaned));
-      } catch(_) { /* ignore parse errors */ }
-    } else {
-      const seed=[
-        {id:'M-1001', name:'Paracetamol 500mg', category:'Tablet', stock:520, expiry:'2026-03-01', updated: new Date().toISOString()},
-        {id:'M-1002', name:'Amoxicillin 250mg', category:'Capsule', stock:120, expiry:'2025-12-15', updated: new Date().toISOString()},
-        {id:'M-1003', name:'Cough Syrup', category:'Syrup', stock:40, expiry:'2025-02-10', updated: new Date().toISOString()},
-        {id:'M-1004', name:'Insulin Pen', category:'Injection', stock:12, expiry:'2025-06-30', updated: new Date().toISOString()}
-      ];
-      localStorage.setItem(key, JSON.stringify(seed));
-      setItems(seed);
+    
+    // Clear existing inventory to fix corruption issues
+    console.log('Clearing pharmacy inventory to fix sync issues...');
+    const seed = [];
+    localStorage.setItem(key, JSON.stringify(seed));
+    setItems(seed);
+    
+    // Dispatch update to clear patient inventory too
+    try {
+      window.dispatchEvent(new CustomEvent('helio_inventory_updated'));
+    } catch (e) {
+      // Ignore event dispatch errors
     }
+    
     setLoading(false);
   },[]);
 
@@ -59,7 +53,15 @@ const Inventory = () => {
     return {label:'In Stock', color:'bg-emerald-100 text-emerald-700 border-emerald-300'};
   };
 
-  const persist = (next) => localStorage.setItem('helio_inventory', JSON.stringify(next));
+  const persist = (next) => {
+    localStorage.setItem('helio_inventory', JSON.stringify(next));
+    // Notify other components that inventory has been updated
+    try {
+      window.dispatchEvent(new CustomEvent('helio_inventory_updated'));
+    } catch (e) {
+      // Ignore event dispatch errors
+    }
+  };
 
   const updateItem = (id, changes) => {
     setItems(prev => {

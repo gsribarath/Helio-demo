@@ -129,20 +129,143 @@ const Medicines = () => {
     { name: 'Care & Cure Pharmacy', address: 'Nabha Village' }
   ];
 
-  useEffect(() => { fetchMedicines(); }, []);
+  // Function to merge static patient medicines with shared inventory
+  const mergeInventories = () => {
+    try {
+      // Get shared inventory from pharmacy
+      const sharedInventory = JSON.parse(localStorage.getItem('helio_inventory') || '[]');
+      
+      // Start with existing patient medicines (Ph01-Ph100) only
+      let mergedMedicines = [...dummyMedicines];
+      
+      // Get or create a patient-specific merged inventory in localStorage
+      const patientMergedKey = 'helio_patient_merged_inventory';
+      const existingMerged = JSON.parse(localStorage.getItem(patientMergedKey) || '[]');
+      
+      // If we have previously merged medicines, start with those instead
+      if (existingMerged.length > 0) {
+        mergedMedicines = existingMerged;
+      }
+      
+      // Find the highest ID number in current merged medicines
+      let maxId = 100; // Start from Ph100
+      mergedMedicines.forEach(med => {
+        const match = med.id.match(/Ph(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxId) maxId = num;
+        }
+      });
+
+      // Remove duplicates from shared inventory first
+      const uniqueSharedInventory = [];
+      const seenNames = new Set();
+      
+      sharedInventory.forEach(sharedMed => {
+        const normalizedName = sharedMed.name.toLowerCase().trim();
+        if (!seenNames.has(normalizedName)) {
+          seenNames.add(normalizedName);
+          uniqueSharedInventory.push(sharedMed);
+        }
+      });
+
+      console.log('Unique shared inventory items:', uniqueSharedInventory.length);
+
+      // Add medicines from unique shared inventory that don't exist in merged inventory
+      uniqueSharedInventory.forEach(sharedMed => {
+        // Check if this medicine already exists in merged inventory
+        const existsInMerged = mergedMedicines.some(mergedMed => 
+          mergedMed.name.toLowerCase().trim() === sharedMed.name.toLowerCase().trim()
+        );
+        
+        if (!existsInMerged) {
+          // Add new medicine with sequential ID
+          maxId++;
+          console.log(`Adding new medicine: ${sharedMed.name} as Ph${maxId}`);
+          const newMedicine = {
+            id: `Ph${maxId}`,
+            name: sharedMed.name,
+            generic_name: sharedMed.generic_name || sharedMed.name,
+            manufacturer: sharedMed.manufacturer || 'Unknown',
+            price: sharedMed.price || 0,
+            stock_quantity: sharedMed.stock_quantity || sharedMed.quantity || 0,
+            expiry_date: sharedMed.expiry_date || '2026-12-31',
+            category: sharedMed.category || 'General',
+            description: sharedMed.description || 'Medicine added from pharmacy',
+            requires_prescription: sharedMed.requires_prescription || false
+          };
+          mergedMedicines.push(newMedicine);
+        } else {
+          console.log(`Medicine already exists, skipping: ${sharedMed.name}`);
+        }
+      });
+
+      // Save the merged inventory to localStorage
+      localStorage.setItem(patientMergedKey, JSON.stringify(mergedMedicines));
+      
+      setMedicines(mergedMedicines);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error merging inventories:', error);
+      setMedicines(dummyMedicines);
+      setLoading(false);
+    }
+  };
+
+  // Function to reset patient inventory (clear duplicates)
+  const resetPatientInventory = () => {
+    try {
+      localStorage.removeItem('helio_patient_merged_inventory');
+      console.log('Patient inventory reset - clearing duplicates');
+      mergeInventories();
+    } catch (error) {
+      console.error('Error resetting inventory:', error);
+    }
+  };
+
+  // Auto-reset on component mount to fix any existing corruption
+  useEffect(() => {
+    // Always force a complete reset to ensure clean state
+    console.log('Forcing complete inventory reset...');
+    localStorage.removeItem('helio_patient_merged_inventory');
+    
+    // Start fresh with just the base medicines (Ph01-Ph100)
+    setMedicines(dummyMedicines);
+    setLoading(false);
+    
+    // Then check for any shared inventory to merge
+    setTimeout(() => {
+      mergeInventories();
+    }, 100);
+  }, []);
+
+  useEffect(() => { 
+    fetchMedicines(); 
+    
+    // Listen for inventory updates from pharmacy
+    const handleInventoryUpdate = () => {
+      console.log('Patient inventory updating from pharmacy changes');
+      mergeInventories();
+    };
+    
+    window.addEventListener('helio_inventory_updated', handleInventoryUpdate);
+    
+    return () => {
+      window.removeEventListener('helio_inventory_updated', handleInventoryUpdate);
+    };
+  }, []);
 
   const fetchMedicines = async () => {
     try {
       setLoading(true);
-      // For demo purposes, we'll use dummy data
+      // For demo purposes, we'll use dummy data merged with shared inventory
       // In production, uncomment the API call below
       // const response = await medicineAPI.getAll();
       // setMedicines(response.data);
       
-      // Simulate API delay
+      // Simulate API delay then merge inventories
       setTimeout(() => {
-        setMedicines(dummyMedicines);
-        setLoading(false);
+        mergeInventories();
       }, 1000);
     } catch (error) {
       console.error('Error fetching medicines:', error);

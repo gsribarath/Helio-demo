@@ -80,13 +80,13 @@ const VideoCallPage = () => {
   }, [phase, startCall]);
 
   // Load / seed inventory with 100 medicines if not already present or insufficient
-  useEffect(()=>{
+  const loadInventory = () => {
     try {
       const key='helio_inventory';
       const raw = localStorage.getItem(key);
       if(raw){
         const arr = JSON.parse(raw);
-        if(Array.isArray(arr) && arr.length >= 100){ setInventory(arr); return; }
+        if(Array.isArray(arr)){ setInventory(arr); return; }
       }
       const baseNames = [
         'Paracetamol 500mg','Amoxicillin 250mg','Ibuprofen 400mg','Cough Syrup','Insulin Pen',
@@ -111,6 +111,21 @@ const VideoCallPage = () => {
       localStorage.setItem(key, JSON.stringify(seed));
       setInventory(seed);
     } catch(e){ console.error('Inventory load failed', e); }
+  };
+
+  useEffect(()=>{
+    loadInventory();
+    
+    // Listen for inventory updates from pharmacy
+    const handleInventoryUpdate = () => {
+      loadInventory();
+    };
+    
+    window.addEventListener('helio_inventory_updated', handleInventoryUpdate);
+    
+    return () => {
+      window.removeEventListener('helio_inventory_updated', handleInventoryUpdate);
+    };
   },[]);
 
   const filteredInventory = inventory.filter(m => m.name.toLowerCase().includes(invSearch.toLowerCase()) || m.id.toLowerCase().includes(invSearch.toLowerCase()));

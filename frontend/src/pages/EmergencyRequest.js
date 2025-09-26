@@ -3,45 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notifyEmergencyRequest } from '../utils/notifications';
 
-// Common medicines database
-const MEDICINE_DATABASE = [
-  { id: 1, name: 'Paracetamol 500mg', category: 'Pain Relief' },
-  { id: 2, name: 'Ibuprofen 400mg', category: 'Pain Relief' },
-  { id: 3, name: 'Aspirin 75mg', category: 'Pain Relief' },
-  { id: 4, name: 'Amoxicillin 500mg', category: 'Antibiotics' },
-  { id: 5, name: 'Azithromycin 250mg', category: 'Antibiotics' },
-  { id: 6, name: 'Cephalexin 500mg', category: 'Antibiotics' },
-  { id: 7, name: 'Omeprazole 20mg', category: 'Gastric' },
-  { id: 8, name: 'Pantoprazole 40mg', category: 'Gastric' },
-  { id: 9, name: 'Metformin 500mg', category: 'Diabetes' },
-  { id: 10, name: 'Insulin Pen', category: 'Diabetes' },
-  { id: 11, name: 'Atorvastatin 20mg', category: 'Heart' },
-  { id: 12, name: 'Amlodipine 5mg', category: 'Heart' },
-  { id: 13, name: 'Lisinopril 10mg', category: 'Heart' },
-  { id: 14, name: 'Salbutamol Inhaler', category: 'Respiratory' },
-  { id: 15, name: 'Prednisolone 5mg', category: 'Anti-inflammatory' },
-  { id: 16, name: 'Cetirizine 10mg', category: 'Antihistamines' },
-  { id: 17, name: 'Loratadine 10mg', category: 'Antihistamines' },
-  { id: 18, name: 'Vitamin D3 60000 IU', category: 'Vitamins' },
-  { id: 19, name: 'Vitamin B12 1500mcg', category: 'Vitamins' },
-  { id: 20, name: 'Cough Syrup', category: 'Respiratory' },
-  { id: 21, name: 'Diclofenac 50mg', category: 'Pain Relief' },
-  { id: 22, name: 'Tramadol 50mg', category: 'Pain Relief' },
-  { id: 23, name: 'Norfloxacin 400mg', category: 'Antibiotics' },
-  { id: 24, name: 'Ranitidine 150mg', category: 'Gastric' },
-  { id: 25, name: 'Furosemide 40mg', category: 'Diuretic' },
-  { id: 26, name: 'Nitroglycerin Tablet', category: 'Emergency Cardiac' },
-  { id: 27, name: 'Epinephrine Auto-Injector', category: 'Emergency Allergy' },
-  { id: 28, name: 'Glucose Tablets', category: 'Emergency Diabetes' },
-  { id: 29, name: 'Aspirin 325mg (Chewable)', category: 'Emergency Cardiac' },
-  { id: 30, name: 'Bronchodilator Inhaler', category: 'Emergency Respiratory' },
-  { id: 31, name: 'Antihistamine Injection', category: 'Emergency Allergy' },
-  { id: 32, name: 'Pain Relief Injection', category: 'Emergency Pain' },
-  { id: 33, name: 'Anti-nausea tablets', category: 'Emergency Gastric' },
-  { id: 34, name: 'Hydrocortisone Cream', category: 'Emergency Skin' },
-  { id: 35, name: 'Burn Relief Gel', category: 'Emergency Skin' }
-];
-
 const EmergencyRequest = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -50,9 +11,33 @@ const EmergencyRequest = () => {
   // New: list of medicines added to the request (with quantities)
   const [items, setItems] = useState([]);
   const [recentRequest, setRecentRequest] = useState(null);
+  const [inventory, setInventory] = useState([]);
 
-  // Filter medicines based on search query
-  const filteredMedicines = MEDICINE_DATABASE.filter(medicine =>
+  // Load inventory from shared localStorage
+  useEffect(() => {
+    const loadInventory = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('helio_inventory') || '[]');
+        setInventory(stored);
+      } catch (error) {
+        console.error('Error loading inventory:', error);
+        setInventory([]);
+      }
+    };
+
+    loadInventory();
+
+    // Listen for inventory updates
+    const handleInventoryUpdate = () => loadInventory();
+    window.addEventListener('helio_inventory_updated', handleInventoryUpdate);
+
+    return () => {
+      window.removeEventListener('helio_inventory_updated', handleInventoryUpdate);
+    };
+  }, []);
+
+  // Filter medicines based on search query from shared inventory
+  const filteredMedicines = inventory.filter(medicine =>
     medicine.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     medicine.category.toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, 10); // Limit to 10 results
