@@ -49,10 +49,14 @@
 .vc-small{color:var(--muted);font-size:12px}
 .vc-divider{height:1px;background:linear-gradient(90deg,#f3f4f6, #e5e7eb);opacity:0.4;border-radius:4px}
 
-.vc-stats{margin-top:auto;font-size:13px;color:var(--muted)}
+.vc-stats{font-size:13px;color:var(--muted)}
 .vc-timer{font-weight:700;color:#111827;font-size:18px}
 .vc-status{margin-top:6px}
 .vc-langs{margin-top:6px}
+
+/* Back button wrapper inside left sidebar */
+.vc-back-wrap{margin-top:auto}
+.vc-back-btn{width:100%; display:inline-flex; align-items:center; justify-content:center}
 
 /* Main stage */
 .vc-main{display:flex;flex-direction:column;gap:12px}

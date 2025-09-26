@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { FaVideo, FaPhone, FaArrowLeft } from 'react-icons/fa';
+import { FaVideo, FaPhone } from 'react-icons/fa';
 
 const DoctorConsultation = () => {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const DoctorConsultation = () => {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="card max-w-md text-center">
           <p className="text-gray-700 font-medium mb-4">Appointment not found or no longer available.</p>
-          <button onClick={()=>navigate('/doctor')} className="btn btn-outline w-full">Back to Dashboard</button>
+          <button onClick={()=>navigate('/doctor')} className="btn-blue w-full" style={{justifyContent:'center'}}>Back to Dashboard</button>
         </div>
       </div>
     );
@@ -59,13 +59,6 @@ const DoctorConsultation = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gray-50 relative">
-      {/* Back Button */}
-      <button
-        onClick={()=>navigate(-1)}
-        className="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-lg border border-blue-600 text-blue-600 font-medium text-sm absolute top-6 left-6 hover:bg-blue-50 transition-colors"
-      >
-        <FaArrowLeft className="text-sm"/> Back
-      </button>
       <div className="card w-full max-w-lg relative">
         <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Patient Details</h1>
         <div className="space-y-4 mb-8">

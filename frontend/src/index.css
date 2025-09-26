@@ -394,6 +394,27 @@ code {
   z-index: 10;
 }
 
+/* Provide safe top spacing for pages that render .hero-header at top */
+.hero-header + * { /* next sibling after hero-header (e.g., title container) */
+  margin-top: 8px;
+}
+
+/* Mobile: place back button in normal flow to avoid overlapping page headings */
+@media (max-width: 640px) {
+  .hero-header {
+    position: relative;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .hero-header .top-left-actions {
+    position: static;
+    top: auto;
+    left: auto;
+    margin: 8px 0 12px 0; /* spacing below the button */
+    z-index: auto;
+  }
+}
+
 /* Solid blue button */
 .btn-blue {
   background: #3b82f6;
@@ -643,6 +664,17 @@ code {
   padding: 8px 14px;
 }
 .btn-outline-blue:hover { background: var(--primary-light); }
+
+/* Ensure outline style isn't overridden by later .btn rules */
+.btn.btn-outline-blue {
+  border: 2px solid var(--primary-color) !important;
+  background: #fff !important;
+  color: var(--primary-color) !important;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* Enhanced Animations */
 @keyframes float {

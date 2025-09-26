@@ -27,8 +27,29 @@ export default function BackButton(){
   return (
     <div className="hero-header" aria-hidden={false} aria-label="Back navigation area">
       <div className="top-left-actions">
-        <button type="button" className="btn-blue" onClick={goBack} aria-label="Back">
-          {'<- Back'}
+        <button
+          type="button"
+          className="btn-blue"
+          onClick={goBack}
+          aria-label="Go back"
+        >
+          {/* Left arrow icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          <span style={{color:'#fff'}}>Back</span>
         </button>
       </div>
     </div>

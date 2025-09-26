@@ -6,6 +6,7 @@ import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
 import ScrollToTop from './components/ScrollToTop';
 import BackButton from './components/BackButton';
+import { useAuth } from './context/AuthContext';
 
 // Pages
 import Home from './pages/Home';
@@ -44,27 +45,9 @@ import DoctorConsultation from './pages/doctor/DoctorConsultation';
 function App() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, login, logout, loading, isAuthenticated } = useAuth();
   
-  // Check for existing authentication on app load
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        // Clear invalid data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-    }
-    setLoading(false);
-  }, []);
+  // AuthProvider handles persisted session; no local re-parse here.
 
   // Set document direction based on language
   useEffect(() => {
@@ -81,18 +64,14 @@ function App() {
 
   // Handle login
   const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    if (userData.token) {
-      localStorage.setItem('token', userData.token);
-    }
+    // Delegate to AuthContext login
+    login(userData.token || 'demo.token', userData);
   };
 
   // Handle logout
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Only explicit logout clears session
+    logout();
   };
 
   // Show loading spinner
@@ -214,7 +193,9 @@ function App() {
             {(() => {
               const doctorMain = new Set(['/doctor', '/doctor/my-appointments', '/doctor/patients', '/doctor/profile', '/doctor/settings']);
               const isMain = doctorMain.has(location.pathname);
-              return !isMain && <BackButton />;
+              // Hide global BackButton on call pages to avoid overlap with call UI
+              const isCallPage = location.pathname.startsWith('/video-call') || location.pathname.startsWith('/audio-call');
+              return (!isMain && !isCallPage) && <BackButton />;
             })()}
             {getRoleBasedRoutes()}
           </main>

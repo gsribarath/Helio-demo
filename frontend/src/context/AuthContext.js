@@ -13,22 +13,23 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
 
+  // Load persisted session once on mount. Never auto-logout; only user action can clear.
   useEffect(() => {
-    if (token) {
-      // Decode token to get user info (in a real app, validate with backend)
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const userData = JSON.parse(localStorage.getItem('user'));
-        setUser(userData);
-      } catch (error) {
-        console.error('Invalid token:', error);
-        logout();
+    try {
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser);
+        setUser(parsed);
       }
+      setToken(localStorage.getItem('token'));
+    } catch (error) {
+      console.warn('AuthProvider: failed to parse persisted user. Keeping session data intact.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [token]);
+  }, []);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
