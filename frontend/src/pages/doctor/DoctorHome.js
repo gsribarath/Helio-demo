@@ -4,6 +4,7 @@ import { FaVideo, FaPhone, FaClock, FaUser, FaLanguage, FaInfoCircle } from 'rea
 import { HiOutlineBadgeCheck } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import '../HomeDoctors.css';
+import { notifyAppointmentAccepted } from '../../utils/notifications';
 
 const DoctorHome = () => {
   const { t } = useTranslation();
@@ -95,6 +96,7 @@ const DoctorHome = () => {
         toastTimerRef.current = setTimeout(() => setToast(null), 3000);
         // Redirect to consultation page with patient details
         if (acceptedAppt) {
+            try { notifyAppointmentAccepted(acceptedAppt); } catch(_){}
           setTimeout(() => {
             navigate(`/doctor/consult/${acceptedAppt.id}`, { state: { appointment: acceptedAppt } });
           }, 400); // slight delay for UX

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { notifyEmergencyRequest } from '../utils/notifications';
 
 // Common medicines database
 const MEDICINE_DATABASE = [
@@ -171,8 +172,9 @@ const EmergencyRequest = () => {
       // Store in localStorage for pharmacy to see
       const key = 'helio_pharmacy_requests';
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      const updated = [emergencyRequest, ...existing];
-      localStorage.setItem(key, JSON.stringify(updated));
+  const updated = [emergencyRequest, ...existing];
+  localStorage.setItem(key, JSON.stringify(updated));
+  try { notifyEmergencyRequest(emergencyRequest); } catch(_){}
 
       // Dispatch custom event to notify pharmacy page
       window.dispatchEvent(new CustomEvent('emergency_request_updated'));

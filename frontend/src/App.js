@@ -6,7 +6,11 @@ import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
 import ScrollToTop from './components/ScrollToTop';
 import BackButton from './components/BackButton';
+<<<<<<< HEAD
 import { useAuth } from './context/AuthContext';
+=======
+import { usePushNotifications } from './hooks/usePushNotifications';
+>>>>>>> 4a629f7e88f974d6c01589cb27f45f5dffb206a7
 
 // Pages
 import Home from './pages/Home';
@@ -47,7 +51,31 @@ function App() {
   const location = useLocation();
   const { user, login, logout, loading, isAuthenticated } = useAuth();
   
+<<<<<<< HEAD
   // AuthProvider handles persisted session; no local re-parse here.
+=======
+  // Initialize push notifications
+  usePushNotifications();
+  
+  // Check for existing authentication on app load
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+>>>>>>> 4a629f7e88f974d6c01589cb27f45f5dffb206a7
 
   // Set document direction based on language
   useEffect(() => {

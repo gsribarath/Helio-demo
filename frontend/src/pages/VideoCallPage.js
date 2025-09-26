@@ -17,6 +17,8 @@ import {
   FaShareSquare
 } from 'react-icons/fa';
 import './VideoCallPage.css';
+import { notifyPrescriptionCreated } from '../utils/notifications';
+import useAdaptiveCall from '../hooks/useAdaptiveCall';
 import TransText from '../components/TransText';
 
 const VideoCallPage = () => {
@@ -34,8 +36,20 @@ const VideoCallPage = () => {
 
   // Call states
   const [callDuration, setCallDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
+  // Adaptive call hook (manages real media + auto video->audio downgrade)
+  const callId = callSessionId || 'demo-call';
+  const {
+    localStream,
+    remoteStream,
+    isAudioOnly,
+    metrics,
+    start: startCall,
+    end: endCall,
+    toggleMute,
+    toggleCamera,
+    muted,
+    cameraOn
+  } = useAdaptiveCall({ callId, wantVideo: true });
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true); // always true now, but kept for compatibility
@@ -68,12 +82,13 @@ const VideoCallPage = () => {
     }
   }, [doctor, patient, navigate]);
 
-  // Timer only when active
+  // Timer + start media only when active
   useEffect(()=>{
     if (phase !== 'active') return;
+    startCall();
     const timer = setInterval(()=> setCallDuration(p=>p+1),1000);
-    return ()=> clearInterval(timer);
-  }, [phase]);
+    return ()=> { clearInterval(timer); };
+  }, [phase, startCall]);
 
   // Load / seed inventory with 100 medicines if not already present or insufficient
   useEffect(()=>{
@@ -153,7 +168,8 @@ const VideoCallPage = () => {
         })),
         createdAt: new Date().toISOString()
       };
-      localStorage.setItem(key, JSON.stringify([record, ...Array.isArray(existing)?existing:[]]));
+  localStorage.setItem(key, JSON.stringify([record, ...Array.isArray(existing)?existing:[]]));
+  try { notifyPrescriptionCreated(record); } catch(_){}
   // Notify same-tab listeners (storage event won't fire in same document)
   try { window.dispatchEvent(new Event('helio_prescriptions_updated')); } catch(_){}
       // Also push to pharmacy requests (Requests page) with same details
@@ -198,6 +214,7 @@ const VideoCallPage = () => {
   };
 
   const handleEndCall = () => {
+    try { endCall(); } catch(_){}
     setPhase('ended');
     cleanupSession();
     setTimeout(()=> navigate('/'), 1200);
@@ -257,7 +274,7 @@ const VideoCallPage = () => {
             <div className="vc-avatar vc-avatar-patient"><TransText text={t('you', 'You')} /></div>
             <div className="vc-person-info">
               <div className="vc-name">{t('patient')}</div>
-              <div className="vc-meta">{t('camera', 'Camera')}: {isCameraOn ? t('on', 'On') : t('off', 'Off')}</div>
+              <div className="vc-meta">{t('camera', 'Camera')}: {cameraOn ? t('on', 'On') : t('off', 'Off')}</div>
             </div>
           </div>
 
@@ -315,40 +332,65 @@ const VideoCallPage = () => {
                 <div className="vc-dummy-info">
                   <div className="vc-dummy-name"><TransText text={doctor.name} /></div>
                   <div className="vc-dummy-specialty"><TransText text={doctor.specialty} /></div>
-                  <div className="vc-dummy-status">{ phase === 'active' ? t('video') + ' ' + t('call','Call') + ' Active' : 'Ringing...' }</div>
+                  <div className="vc-dummy-status">{ phase === 'active' ? (isAudioOnly ? 'Audio Only (network)' : t('video') + ' ' + t('call','Call') + ' Active') : 'Ringing...' }</div>
                 </div>
               </div>
             </div>
 
             <div className="vc-mini-video">
-              {isCameraOn ? (
-                <div className="mini-on">
-                  <div className="mini-avatar"><TransText text={t('you', 'You')} /></div>
-                  <div className="mini-txt">{t('camera_on', 'Camera On')}</div>
-                </div>
+              {cameraOn ? (
+                localStream ? (
+                  <video
+                    ref={(el)=> { if(el && localStream && el.srcObject !== localStream) el.srcObject = localStream; }}
+                    autoPlay
+                    muted
+                    playsInline
+                    style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:8,background:'#000'}}
+                    aria-label={t('your_camera_view','Your camera view')}
+                  />
+                ) : (
+                  <div className="mini-on" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+                    <div className="mini-avatar"><TransText text={t('you', 'You')} /></div>
+                    <div className="mini-txt" style={{fontSize:12,opacity:0.8}}>{t('starting_camera','Starting camera...')}</div>
+                  </div>
+                )
               ) : (
                 <div className="mini-off"><FaVideoSlash /> {t('camera_off', 'Camera Off')}</div>
               )}
             </div>
 
+            {/* Hidden actual media elements (design unchanged) */}
+            <video
+              ref={(el)=> { if(el && localStream && el.srcObject !== localStream) el.srcObject = localStream; }}
+              autoPlay muted playsInline style={{display:'none'}} />
+            <video
+              ref={(el)=> { if(el && remoteStream && el.srcObject !== remoteStream) el.srcObject = remoteStream; }}
+              autoPlay playsInline style={{display:'none'}} />
+
+            {phase==='active' && (
+              <div style={{position:'absolute', top:8, left:8, background:'rgba(0,0,0,0.55)', color:'#fff', padding:'4px 8px', borderRadius:4, fontSize:11, lineHeight:1.2}}>
+                {metrics.bitrateKbps} kbps • loss {metrics.packetLoss}% {isAudioOnly && '• audio only'}
+              </div>
+            )}
+
             {phase === 'active' && (
-            <div className={`vc-controls ${showControls ? 'visible' : ''}`} style={{bottom:'110px'}}>
-              <button className={`control-btn ${isMuted ? 'active muted' : ''}`} onClick={() => setIsMuted(!isMuted)} title={isMuted ? t('unmute', 'Unmute') : t('mute', 'Mute')}>
-                {isMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
-              </button>
+              <div className={`vc-controls ${showControls ? 'visible' : ''}`} style={{bottom:'110px'}}>
+                <button className={`control-btn ${muted ? 'active muted' : ''}`} onClick={toggleMute} title={muted ? t('unmute', 'Unmute') : t('mute', 'Mute')}>
+                  {muted ? <FaMicrophoneSlash /> : <FaMicrophone />}
+                </button>
 
-              <button className={`control-btn ${!isCameraOn ? 'active muted' : ''}`} onClick={() => setIsCameraOn(!isCameraOn)} title={isCameraOn ? t('turn_camera_off', 'Turn camera off') : t('turn_camera_on', 'Turn camera on')}>
-                {isCameraOn ? <FaVideo /> : <FaVideoSlash />}
-              </button>
+                <button className={`control-btn ${!cameraOn ? 'active muted' : ''}`} onClick={toggleCamera} title={cameraOn ? t('turn_camera_off', 'Turn camera off') : t('turn_camera_on', 'Turn camera on')}>
+                  {cameraOn ? <FaVideo /> : <FaVideoSlash />}
+                </button>
 
-              <button className="control-btn end" onClick={handleEndCall} title={t('end_call', 'End Call')}><FaPhoneSlash /></button>
+                <button className="control-btn end" onClick={handleEndCall} title={t('end_call', 'End Call')}><FaPhoneSlash /></button>
 
-              <button className={`control-btn ${!isSpeakerOn ? 'active muted' : ''}`} onClick={() => setIsSpeakerOn(!isSpeakerOn)} title={isSpeakerOn ? t('mute_speaker', 'Mute speaker') : t('unmute_speaker', 'Unmute speaker')}>
-                {isSpeakerOn ? <FaVolumeUp /> : <FaVolumeMute />}
-              </button>
+                <button className={`control-btn ${!isSpeakerOn ? 'active muted' : ''}`} onClick={() => setIsSpeakerOn(!isSpeakerOn)} title={isSpeakerOn ? t('mute_speaker', 'Mute speaker') : t('unmute_speaker', 'Unmute speaker')}>
+                  {isSpeakerOn ? <FaVolumeUp /> : <FaVolumeMute />}
+                </button>
 
-              <button className="control-btn" title={t('share_screen', 'Share screen')}><FaShareSquare /></button>
-            </div>
+                <button className="control-btn" title={t('share_screen', 'Share screen')}><FaShareSquare /></button>
+              </div>
             )}
           </div>
         </main>
