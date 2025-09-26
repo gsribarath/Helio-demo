@@ -394,26 +394,6 @@ code {
   z-index: 10;
 }
 
-<<<<<<< HEAD
-/* Provide safe top spacing for pages that render .hero-header at top */
-.hero-header + * { /* next sibling after hero-header (e.g., title container) */
-  margin-top: 8px;
-}
-
-/* Mobile: place back button in normal flow to avoid overlapping page headings */
-@media (max-width: 640px) {
-  .hero-header {
-    position: relative;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  .hero-header .top-left-actions {
-    position: static;
-    top: auto;
-    left: auto;
-    margin: 8px 0 12px 0; /* spacing below the button */
-    z-index: auto;
-=======
 /* Static back button bar (replaces floating variant when component updated) */
 .back-button-bar {
   width: 100%;
@@ -499,7 +479,6 @@ code {
   .page-header-with-back .btn-blue {
     padding: 6px 10px;
     font-size: 12px;
->>>>>>> db4e1cf78612e9dbf7ea768cae3c76007cec1315
   }
 }
 
