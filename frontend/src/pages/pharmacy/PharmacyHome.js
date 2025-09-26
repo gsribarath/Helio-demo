@@ -4,72 +4,108 @@ const PharmacyHome = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Load only emergency requests from localStorage
+  // Normalize storage: move approved emergency requests to archive and show only pending on Home
+  const refreshRequests = () => {
     const key = 'helio_pharmacy_requests';
+    const acceptedKey = 'helio_pharmacy_accepted_requests';
     const raw = localStorage.getItem(key);
-    if (raw) {
-      try { 
-        const allRequests = JSON.parse(raw);
-        
-        // Remove demo data (requests without type='emergency')
-        const cleanedRequests = allRequests.filter(req => req.type === 'emergency');
-        if (cleanedRequests.length !== allRequests.length) {
-          localStorage.setItem(key, JSON.stringify(cleanedRequests));
-        }
-        
-        // Filter to only show emergency requests and sort by date (newest first)
-        const emergencyRequests = cleanedRequests
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-        setRequests(emergencyRequests);
-      } catch(_) {
-        setRequests([]);
+    if (!raw) {
+      setRequests([]);
+      return;
+    }
+    try {
+      const allRequests = JSON.parse(raw);
+      const onlyEmergency = allRequests.filter(r => r.type === 'emergency');
+
+      // Split approved and pending
+      const toArchive = onlyEmergency.filter(r => r.status === 'approved');
+      const pendingEmergency = onlyEmergency.filter(r => r.status !== 'approved');
+
+      // Persist updated pending back to requests (keep any non-emergency entries untouched)
+      const nonEmergency = allRequests.filter(r => r.type !== 'emergency');
+      const newAll = [...nonEmergency, ...pendingEmergency];
+
+      // If there are accepted requests, move them into the accepted storage (dedupe by id)
+      if (toArchive.length > 0) {
+        const existingAccepted = JSON.parse(localStorage.getItem(acceptedKey) || '[]');
+        const existingIds = new Set(existingAccepted.map(r => r.id));
+        toArchive.forEach(r => {
+          if (!existingIds.has(r.id)) {
+            if (!r.acceptedDate) r.acceptedDate = new Date().toISOString();
+            existingAccepted.push(r);
+          }
+        });
+        localStorage.setItem(acceptedKey, JSON.stringify(existingAccepted));
+        localStorage.setItem(key, JSON.stringify(newAll));
+        // Notify info page to refresh
+        window.dispatchEvent(new CustomEvent('accepted_request_updated'));
+      } else {
+        // Ensure storage stays cleaned
+        localStorage.setItem(key, JSON.stringify(newAll));
       }
-    } else {
+
+      // Show only pending requests on Home, newest first
+      setRequests(pendingEmergency.sort((a, b) => new Date(b.date) - new Date(a.date)));
+    } catch (_) {
       setRequests([]);
     }
+  };
+
+  useEffect(() => {
+    refreshRequests();
     setLoading(false);
 
-    // Listen for new emergency requests
-    const handleStorageChange = () => {
-      const updatedRaw = localStorage.getItem(key);
-      if (updatedRaw) {
-        try {
-          const allRequests = JSON.parse(updatedRaw);
-          const emergencyRequests = allRequests
-            .filter(req => req.type === 'emergency')
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
-          setRequests(emergencyRequests);
-        } catch(_) {
-          setRequests([]);
-        }
-      }
-    };
-
-    const handleEmergencyUpdate = () => {
-      handleStorageChange();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('emergency_request_updated', handleEmergencyUpdate);
-    
+    const handleChanges = () => refreshRequests();
+    window.addEventListener('storage', handleChanges);
+    window.addEventListener('emergency_request_updated', handleChanges);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('emergency_request_updated', handleEmergencyUpdate);
+      window.removeEventListener('storage', handleChanges);
+      window.removeEventListener('emergency_request_updated', handleChanges);
     };
   }, []);
 
   const updateStatus = (id, status) => {
     const key = 'helio_pharmacy_requests';
     const allRequests = JSON.parse(localStorage.getItem(key) || '[]');
-    const updatedAllRequests = allRequests.map(r => r.id === id ? { ...r, status } : r);
-    localStorage.setItem(key, JSON.stringify(updatedAllRequests));
     
-    // Update the emergency requests displayed
-    const emergencyRequests = updatedAllRequests
-      .filter(req => req.type === 'emergency')
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-    setRequests(emergencyRequests);
+    if (status === 'approved') {
+      // Find the request being approved
+      const requestToApprove = allRequests.find(r => r.id === id);
+      if (requestToApprove) {
+        // Mark approved and add accepted date
+        requestToApprove.status = 'approved';
+        requestToApprove.acceptedDate = new Date().toISOString();
+        
+        // Move to accepted requests storage
+        const acceptedKey = 'helio_pharmacy_accepted_requests';
+        const existingAccepted = JSON.parse(localStorage.getItem(acceptedKey) || '[]');
+        existingAccepted.push(requestToApprove);
+        localStorage.setItem(acceptedKey, JSON.stringify(existingAccepted));
+        
+        // Remove from pending requests
+        const remainingRequests = allRequests.filter(r => r.id !== id);
+        localStorage.setItem(key, JSON.stringify(remainingRequests));
+        
+        // Update the emergency requests displayed (only pending ones)
+        const emergencyRequests = remainingRequests
+          .filter(req => req.type === 'emergency' && req.status !== 'approved')
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        setRequests(emergencyRequests);
+        
+        // Dispatch event for accepted requests page
+        window.dispatchEvent(new CustomEvent('accepted_request_updated'));
+      }
+    } else {
+      // For other status updates (if any)
+      const updatedAllRequests = allRequests.map(r => r.id === id ? { ...r, status } : r);
+      localStorage.setItem(key, JSON.stringify(updatedAllRequests));
+      
+      // Update the emergency requests displayed
+      const emergencyRequests = updatedAllRequests
+        .filter(req => req.type === 'emergency')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      setRequests(emergencyRequests);
+    }
   };
 
   const statusColors = {
@@ -81,7 +117,12 @@ const PharmacyHome = () => {
 
   return (
     <div className="min-h-screen pb-32 bg-gray-50">
-      <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12 mb-8">
+      <div className="bg-gradient-to-r from-primary-color to-primary-dark text-white py-12 mb-8 hero-header">
+        <div className="top-right-actions">
+          <a href="/pharmacy/info" className="info-icon-btn" aria-label="Info">
+            i
+          </a>
+        </div>
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl font-black mb-2 tracking-tight">Welcome to Helio</h1>
           <p className="text-primary-light">Manage and track emergency medicine requests in real-time.</p>

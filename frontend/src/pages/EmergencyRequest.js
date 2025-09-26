@@ -56,19 +56,54 @@ const EmergencyRequest = () => {
     medicine.category.toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, 10); // Limit to 10 results
 
-  // Load most recent emergency request for this patient
-  useEffect(() => {
+  // Helper to get the most recent emergency request (pending or accepted)
+  const loadRecentEmergency = () => {
     try {
-      const key = 'helio_pharmacy_requests';
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      const list = existing
+      const pendingKey = 'helio_pharmacy_requests';
+      const acceptedKey = 'helio_pharmacy_accepted_requests';
+      const pendingAll = JSON.parse(localStorage.getItem(pendingKey) || '[]');
+      const acceptedAll = JSON.parse(localStorage.getItem(acceptedKey) || '[]');
+      const cached = JSON.parse(localStorage.getItem('helio_last_emergency_request') || 'null');
+
+      const mine = (arr) => arr
         .filter(r => r.type === 'emergency')
-        .filter(r => !user?.id || r.patientId === user.id)
-        .sort((a, b) => new Date(b.date) - new Date(a.date));
-      setRecentRequest(list[0] || null);
+        .filter(r => !user?.id || r.patientId === user.id);
+
+      const pending = mine(pendingAll);
+      const accepted = mine(acceptedAll).map(r => ({ ...r, status: r.status || 'approved' }));
+
+      // Choose newest based on acceptedDate for accepted, else date
+      let combined = [...pending, ...accepted];
+      // If cached request exists, try to merge newer status from accepted storage
+      if (cached && cached.id) {
+        const inAccepted = accepted.find(r => r.id === cached.id);
+        if (inAccepted) {
+          // ensure status is approved and acceptedDate shown
+          cached.status = inAccepted.status || 'approved';
+          cached.acceptedDate = inAccepted.acceptedDate || cached.acceptedDate;
+          combined = combined.filter(r => r.id !== cached.id).concat([cached]);
+        }
+      }
+      const mostRecent = combined
+        .sort((a, b) => new Date((b.acceptedDate || b.date)) - new Date((a.acceptedDate || a.date)))[0];
+      setRecentRequest(mostRecent || null);
     } catch (_) {
       setRecentRequest(null);
     }
+  };
+
+  // Load most recent emergency request for this patient and listen to updates
+  useEffect(() => {
+    loadRecentEmergency();
+    const handler = () => loadRecentEmergency();
+    window.addEventListener('storage', handler);
+    window.addEventListener('emergency_request_updated', handler);
+    window.addEventListener('accepted_request_updated', handler);
+    return () => {
+      window.removeEventListener('storage', handler);
+      window.removeEventListener('emergency_request_updated', handler);
+      window.removeEventListener('accepted_request_updated', handler);
+    };
   }, [user?.id]);
 
   // No dropdown handlers needed now; we show a table below with search filtering
@@ -142,9 +177,14 @@ const EmergencyRequest = () => {
       // Dispatch custom event to notify pharmacy page
       window.dispatchEvent(new CustomEvent('emergency_request_updated'));
 
+      // Also cache patient's last emergency request for quick UI reflection
+      try {
+        localStorage.setItem('helio_last_emergency_request', JSON.stringify(emergencyRequest));
+      } catch {}
+
       alert(`Emergency request submitted successfully!\nRequest ID: ${emergencyRequest.id}\nYour request will be processed immediately.`);
       // Update recent card and clear current selections
-      setRecentRequest(emergencyRequest);
+  setRecentRequest(emergencyRequest);
       setItems([]);
       setSearchQuery('');
     } catch (error) {
@@ -314,16 +354,7 @@ const EmergencyRequest = () => {
           </form>
         </div>
 
-        {/* Patient Info Display */}
-        {user && (
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">Request will be submitted for:</h3>
-            <p className="text-blue-800 text-sm">
-              <strong>Patient Name:</strong> {user.name}<br/>
-              <strong>Patient ID:</strong> {user.id || 'P-000'}
-            </p>
-          </div>
-        )}
+        {/* Patient Info Display removed as requested */}
 
         {/* Recently requested card (mobile responsive) */}
         {recentRequest && (

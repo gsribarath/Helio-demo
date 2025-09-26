@@ -104,10 +104,8 @@ const PharmacyRequests = () => {
                     <>
                       <td rowSpan={r.span} className="px-3 py-3 border border-gray-300 align-top text-[11px] text-gray-600 whitespace-nowrap">{new Date(r.req.created).toLocaleString()}</td>
                       <td rowSpan={r.span} className="px-3 py-3 border border-gray-300 align-top actions-col">
-                        <div className="action-buttons min-w-[140px]">
-                          <button className="text-xs font-semibold px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white shadow">Approve</button>
-                          <button className="text-xs font-semibold px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white shadow">Reject</button>
-                          <button className="text-xs font-semibold px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white shadow">Prepare</button>
+                        <div className="action-buttons min-w-[80px]">
+                          <button className="btn-approve">Approve</button>
                         </div>
                       </td>
                     </>

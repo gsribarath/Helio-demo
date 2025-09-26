@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
 import ScrollToTop from './components/ScrollToTop';
+import BackButton from './components/BackButton';
 
 // Pages
 import Home from './pages/Home';
@@ -30,10 +31,12 @@ import DoctorBottomNavigation from './components/DoctorBottomNavigation';
 // Pharmacy components
 import PharmacySidebar from './components/pharmacy/PharmacySidebar';
 import PharmacyHome from './pages/pharmacy/PharmacyHome';
+import PharmacyInfo from './pages/pharmacy/PharmacyInfo';
 import PharmacyRequests from './pages/pharmacy/PharmacyRequests';
 import PrescriptionImageRequests from './pages/pharmacy/PrescriptionImageRequests';
 import Inventory from './pages/pharmacy/Inventory';
 import PharmacyReports from './pages/pharmacy/PharmacyReports';
+import PharmacistProfile from './pages/pharmacy/PharmacistProfile';
 import DoctorPatientInfo from './pages/doctor/DoctorPatientInfo';
 import DoctorPatients from './pages/doctor/DoctorPatients';
 import DoctorConsultation from './pages/doctor/DoctorConsultation';
@@ -162,6 +165,8 @@ function App() {
         <Routes>
           <Route path="/" element={<PharmacyHome />} />
           <Route path="/pharmacy" element={<PharmacyHome />} />
+          <Route path="/pharmacy/info" element={<PharmacyInfo />} />
+          <Route path="/pharmacy/profile" element={<PharmacistProfile />} />
           <Route path="/pharmacy/requests" element={<PharmacyRequests />} />
           <Route path="/pharmacy/image-requests" element={<PrescriptionImageRequests />} />
           <Route path="/pharmacy/inventory" element={<Inventory />} />
@@ -180,12 +185,15 @@ function App() {
 
   // For patients, show the existing interface with navigation
   if (user.role === 'patient') {
+    const patientMain = new Set(['/', '/home', '/medicines', '/availability', '/profile', '/settings']);
+    const showBack = !patientMain.has(location.pathname) && !location.pathname.startsWith('/video-call') && !location.pathname.startsWith('/audio-call');
     return (
       <div className="App min-h-screen bg-gray-50">
         <div className="flex flex-col min-h-screen">
           <Navbar user={user} onLogout={handleLogout} />
           <main className="flex-1 px-2" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
             <ScrollToTop />
+            {showBack && <BackButton />}
             {getRoleBasedRoutes()}
           </main>
           {/* Spacer no longer required; body padding via .app-has-bottomnav handles layout */}
@@ -203,6 +211,11 @@ function App() {
           <Navbar user={user} onLogout={handleLogout} />
           <main className="flex-1 px-2" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
             <ScrollToTop />
+            {(() => {
+              const doctorMain = new Set(['/doctor', '/doctor/my-appointments', '/doctor/patients', '/doctor/profile', '/doctor/settings']);
+              const isMain = doctorMain.has(location.pathname);
+              return !isMain && <BackButton />;
+            })()}
             {getRoleBasedRoutes()}
           </main>
           {/* Spacer removed; body padding via .app-has-bottomnav handles layout */}
@@ -213,6 +226,11 @@ function App() {
           <Navbar user={user} onLogout={handleLogout} />
           <main className="flex-1 px-2" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
             <ScrollToTop />
+            {(() => {
+              const pharmMain = new Set(['/pharmacy', '/pharmacy/requests', '/pharmacy/image-requests', '/pharmacy/inventory', '/pharmacy/profile']);
+              const isMain = pharmMain.has(location.pathname);
+              return !isMain && <BackButton />;
+            })()}
             {getRoleBasedRoutes()}
           </main>
           {/* Spacer removed; body padding via .app-has-bottomnav handles layout */}

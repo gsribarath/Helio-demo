@@ -125,16 +125,20 @@ const Inventory = () => {
   return (
     <div className="min-h-screen pb-32 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 pt-8">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-8 rounded-xl mb-8 shadow text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Pharmacy Inventory</h1>
-            <p className="text-blue-100 text-sm sm:text-base mb-4">Centralized real-time medicine stock overview & control.</p>
-            <button
-              onClick={beginAdd}
-              disabled={editingId==='new'}
-              className="inline-flex items-center gap-2 bg-white text-blue-600 font-semibold text-sm px-4 py-2 rounded-md shadow hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <FaPlus/> Add Medicine
-            </button>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-8 rounded-xl mb-8 shadow">
+          <div className="inventory-header">
+            <div className="add-medicine-container">
+              <button
+                onClick={beginAdd}
+                disabled={editingId==='new'}
+                className="btn-add-medicine"
+              >
+                <FaPlus/> Add Medicine
+              </button>
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2">Pharmacy Inventory</h1>
+            <p className="text-blue-100 text-sm sm:text-base">Centralized real-time medicine stock overview & control.</p>
+          </div>
         </div>
 
         {loading && <div className="text-center py-12 text-gray-500">Loading inventory...</div>}
@@ -190,9 +194,9 @@ const Inventory = () => {
                             </>
                           ) : (
                             <>
-                              <button onClick={()=>updateItem(item.id,{stock:item.stock+10})} title="+10 Stock" className="text-blue-600 hover:text-blue-800"><FaSyncAlt/></button>
-                              <button onClick={()=>beginEdit(item.id)} title="Edit" className="text-emerald-600 hover:text-emerald-700"><FaEdit/></button>
-                              <button onClick={()=>deleteItem(item.id)} title="Delete" className="text-rose-600 hover:text-rose-800"><FaTrash/></button>
+                              <button onClick={()=>updateItem(item.id,{stock:item.stock+10})} title="+10 Stock" className="inventory-action-btn"><FaSyncAlt/></button>
+                              <button onClick={()=>beginEdit(item.id)} title="Edit" className="inventory-action-btn"><FaEdit/></button>
+                              <button onClick={()=>deleteItem(item.id)} title="Delete" className="inventory-action-btn"><FaTrash/></button>
                             </>
                           )}
                         </div>

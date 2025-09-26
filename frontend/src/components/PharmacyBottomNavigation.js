@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaChartBar, FaBoxes, FaFilePrescription, FaImage } from 'react-icons/fa';
+import { FaChartBar, FaBoxes, FaFilePrescription, FaImage, FaUser } from 'react-icons/fa';
 
 // Matches unified style used in BottomNavigation (patients/doctors)
 // Icon container: 36x36, radius 12, active blue background, inactive indigo border
@@ -9,7 +9,8 @@ const navItems = [
   { path: '/pharmacy', label: 'Home', icon: FaChartBar },
   { path: '/pharmacy/requests', label: 'Requests', icon: FaFilePrescription },
   { path: '/pharmacy/image-requests', label: 'Prescriptions', icon: FaImage },
-  { path: '/pharmacy/inventory', label: 'Inventory', icon: FaBoxes }
+  { path: '/pharmacy/inventory', label: 'Inventory', icon: FaBoxes },
+  { path: '/pharmacy/profile', label: 'Profile', icon: FaUser }
 ];
 
 export default function PharmacyBottomNavigation(){

@@ -47,10 +47,30 @@ const PrescriptionImageRequests = () => {
       pendingRequests = Array.from(map.values());
 
       // Normalize image URLs to absolute for rendering
-      pendingRequests = pendingRequests.map(r => ({
-        ...r,
-        prescriptionImageUrl: toAbsoluteUrl(r.prescriptionImageUrl)
-      }));
+      // Normalize image url and patient identifiers
+      pendingRequests = pendingRequests.map(r => {
+        const idRaw = r.patientId ?? r.id;
+        let formattedId = idRaw;
+        // If numeric like 1 -> P001, 25 -> P025
+        if (typeof idRaw === 'number' || (/^\d+$/.test(String(idRaw)))) {
+          const n = Number(idRaw);
+          formattedId = `P${String(n).padStart(3, '0')}`;
+        } else if (typeof idRaw === 'string' && !/^P\d{3,}$/i.test(idRaw)) {
+          // Try to extract trailing number
+          const m = String(idRaw).match(/(\d+)$/);
+          if (m) {
+            formattedId = `P${String(Number(m[1])).padStart(3, '0')}`;
+          } else {
+            formattedId = idRaw; // leave as-is
+          }
+        }
+        return {
+          ...r,
+          patientName: r.patientName || 'Patient',
+          patientId: formattedId,
+          prescriptionImageUrl: toAbsoluteUrl(r.prescriptionImageUrl)
+        };
+      });
       
       setRequests(pendingRequests);
     } catch (error) {
@@ -158,20 +178,18 @@ const PrescriptionImageRequests = () => {
         <div className="px-4 max-w-7xl mx-auto">
           <div className="grid gap-6">
             {requests.map((request) => (
-              <div key={request.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 sm:p-6">
+              <div key={request.id} className="rx-card overflow-hidden">
+                <div className="p-2 sm:p-2">
                   {/* Patient Info Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                  <div className="rx-card-header">
                     <div className="flex items-center gap-3">
                       <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
                         <FaUserInjured className="text-green-600 text-lg" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {request.patientName || 'Patient'}
-                        </h3>
-                        <p className="text-sm text-gray-600">Patient ID: {request.patientId || 'N/A'}</p>
-                        <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <h3 className="rx-card-title">{request.patientName}</h3>
+                        <p className="rx-card-meta">Patient ID: {request.patientId || 'N/A'}</p>
+                        <p className="rx-card-meta flex items-center gap-1 mt-1">
                           <FaClock className="text-xs" />
                           {new Date(request.createdAt).toLocaleString()}
                         </p>
@@ -187,12 +205,12 @@ const PrescriptionImageRequests = () => {
                         Prescription Image
                       </h4>
                       {request.prescriptionImageUrl ? (
-                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 h-40 flex flex-col items-center justify-center">
+                        <div className="rx-image-box">
                           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
                             <FaImage className="text-blue-600 text-xl" />
                           </div>
                           <p className="text-sm font-medium text-gray-900 mb-3 text-center">Prescription Available</p>
-                           <button
+                          <button
                              onClick={() => window.open(request.prescriptionImageUrl, '_blank')}
                              className="btn btn-blue text-sm"
                            >
@@ -209,7 +227,7 @@ const PrescriptionImageRequests = () => {
                   </div>
 
                   {/* Approve button centered at bottom */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="rx-card-footer">
                     <div className="flex justify-center">
                       <button
                         onClick={() => handleStatusUpdate(request.id, 'approved')}
