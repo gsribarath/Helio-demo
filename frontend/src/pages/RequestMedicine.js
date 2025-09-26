@@ -146,7 +146,8 @@ export default function RequestMedicine() {
       </header>
 
       <main className="px-3 sm:px-4 max-w-3xl mx-auto">
-        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+        {/* Primary request form card using reusable rx-card */}
+        <div className="rx-card p-5 sm:p-6 md:p-8">
           {/* Patient info */}
           {currentUser && (currentUser.name || currentUser.id) && (
             <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -222,16 +223,19 @@ export default function RequestMedicine() {
           </div>
         </div>
 
-        {/* Recent upload card - status only (no view option) */}
+        {/* Recent upload reusing rx-card styling */}
         {recentRequest && (
-          <div className="mt-4 sm:mt-6 bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-6 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Recent Prescription Upload</h3>
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${recentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : recentStatus === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}`}>
-                {recentStatus.toUpperCase()}
+          <div className="rx-card mt-5 sm:mt-6">
+            <div className="rx-card-header" style={{marginBottom:'12px'}}>
+              <div>
+                <h3 className="rx-card-title text-base sm:text-lg">Recent Prescription Upload</h3>
+                <div className="rx-card-meta text-[11px] sm:text-xs">Latest submitted request status</div>
+              </div>
+              <span className={`status-badge ${recentStatus === 'pending' ? 'status-pending' : recentStatus === 'approved' ? 'status-approved' : 'status-rejected'}`}>
+                {recentStatus === 'pending' ? 'PENDING' : recentStatus === 'approved' ? 'APPROVED' : recentStatus.toUpperCase()}
               </span>
             </div>
-            <div className="p-4 sm:p-6">
+            <div>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                 <div>
                   <dt className="text-xs sm:text-sm text-gray-500">Request ID</dt>
@@ -242,8 +246,7 @@ export default function RequestMedicine() {
                   <dd className="text-sm sm:text-base font-medium text-gray-900">{new Date(recentRequest.createdAt).toLocaleString()}</dd>
                 </div>
               </dl>
-
-              <div className="mt-4 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-600">
+              <div className="mt-4 p-3 sm:p-4 rounded-md bg-gray-50 text-sm text-gray-600 border border-gray-200">
                 Status will update automatically once the pharmacy reviews your prescription.
               </div>
             </div>

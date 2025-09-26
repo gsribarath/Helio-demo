@@ -1,21 +1,20 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Reusable Back button using existing CSS classes: .btn-blue and .top-left-actions
+// Static back button bar (no absolute/fixed positioning)
+// Places a single back button in normal document flow at page top (under any nav)
 export default function BackButton(){
   const navigate = useNavigate();
   const { user } = useAuth();
-  const location = useLocation();
 
-  const fallback = (() => {
-    if(user?.role === 'doctor') return '/doctor';
-    if(user?.role === 'pharmacist') return '/pharmacy';
-    return '/';
-  })();
+  const fallback = user?.role === 'doctor'
+    ? '/doctor'
+    : user?.role === 'pharmacist'
+      ? '/pharmacy'
+      : '/';
 
   const goBack = () => {
-    // If there's no history to go back to, navigate to role home
     if (window.history.length <= 1) {
       navigate(fallback, { replace: true });
     } else {
@@ -23,35 +22,32 @@ export default function BackButton(){
     }
   };
 
-  // Render within a positioned wrapper so .top-left-actions anchors properly
   return (
-    <div className="hero-header" aria-hidden={false} aria-label="Back navigation area">
-      <div className="top-left-actions">
-        <button
-          type="button"
-          className="btn-blue"
-          onClick={goBack}
-          aria-label="Go back"
+    <div className="back-button-bar" role="navigation" aria-label="Back navigation">
+      <button
+        type="button"
+        className="btn-blue"
+        onClick={goBack}
+        aria-label="Go back"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          focusable="false"
+          style={{marginRight:6}}
         >
-          {/* Left arrow icon */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          <span style={{color:'#fff'}}>Back</span>
-        </button>
-      </div>
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span style={{color:'#fff'}}>Back</span>
+      </button>
     </div>
   );
 }

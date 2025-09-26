@@ -161,7 +161,11 @@ export default function MyAppointments() {
         </div>
       </div>
       <div className="ma-right">
-        <div className="ma-status">{a.status === 'upcoming' ? t('scheduled') : <TransText text={a.status || t('scheduled')} />}</div>
+        <div className="ma-status">
+          {a.status === 'upcoming' && t('scheduled')}
+          {a.status === 'in_progress' && 'In progress'}
+          {a.status !== 'upcoming' && a.status !== 'in_progress' && <TransText text={a.status || t('scheduled')} />}
+        </div>
       </div>
     </div>
   );
@@ -170,10 +174,10 @@ export default function MyAppointments() {
     <div className="ma-page container mx-auto px-6 py-8">
   <h1 className="text-2xl font-bold mb-4">{t('my_appointments')}</h1>
 
-      <div className="ma-tabs card mb-6">
-  <button className={`ma-tab ${tab==='upcoming'?'active':''}`} onClick={()=>setTab('upcoming')}>{t('upcoming')}</button>
-  <button className={`ma-tab ${tab==='past'?'active':''}`} onClick={()=>setTab('past')}>{t('past')}</button>
-        <button className={`ma-tab ${tab==='cancelled'?'active':''}`} onClick={()=>setTab('cancelled')}>{t('cancelled')}</button>
+      <div className="ma-tabs card mb-6" role="tablist" aria-label="Appointment sections">
+        <button className={`ma-tab ${tab==='upcoming'?'active':''}`} role="tab" aria-selected={tab==='upcoming'} onClick={()=>setTab('upcoming')}>{t('upcoming')}</button>
+        <button className={`ma-tab ${tab==='past'?'active':''}`} role="tab" aria-selected={tab==='past'} onClick={()=>setTab('past')}>{t('past')}</button>
+        <button className={`ma-tab ${tab==='cancelled'?'active':''}`} role="tab" aria-selected={tab==='cancelled'} onClick={()=>setTab('cancelled')}>{t('cancelled')}</button>
       </div>
 
       <div className="ma-list">
