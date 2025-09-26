@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa';
 
 import './VideoCallPage.css';
+import useAdaptiveCall from '../hooks/useAdaptiveCall';
 
 const AudioCallPage = () => {
   const { t } = useTranslation();
@@ -25,7 +26,8 @@ const AudioCallPage = () => {
   // Call states
   const [callDuration, setCallDuration] = useState(0);
   const [callStatus, setCallStatus] = useState('ringing'); // 'ringing', 'connected', 'ended'
-  const [isMuted, setIsMuted] = useState(false);
+  const callId = callSessionId || 'demo-audio-call';
+  const { localStream, remoteStream, start: startCall, end: endCall, toggleMute, muted, metrics } = useAdaptiveCall({ callId, wantVideo:false });
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [isCallActive, setIsCallActive] = useState(true);
   // fullscreen state is managed via DOM fullscreen API; no local flag needed
@@ -38,9 +40,10 @@ const AudioCallPage = () => {
 
   useEffect(() => {
     if (phase !== 'active' || !isCallActive) return;
+    startCall();
     const timer = setInterval(()=> setCallDuration(p=>p+1),1000);
-    return ()=> clearInterval(timer);
-  }, [phase, isCallActive]);
+    return ()=> { clearInterval(timer); };
+  }, [phase, isCallActive, startCall]);
 
   const cleanupSession = () => {
     try {
@@ -59,6 +62,7 @@ const AudioCallPage = () => {
   };
 
   const handleEndCall = () => {
+    try { endCall(); } catch(_){}
     setCallStatus('ended');
     setIsCallActive(false);
     setPhase('ended');
@@ -160,12 +164,12 @@ const AudioCallPage = () => {
         {phase === 'active' && (
         <div className="vc-controls" role="toolbar" aria-label={t('call_controls', 'call controls')} style={{bottom:'110px',position:'fixed',left:'50%',transform:'translateX(-50%)'}}>
           <button
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={toggleMute}
             disabled={callStatus !== 'connected'}
-            className={`control-btn ${isMuted ? 'muted active' : ''}`}
-            title={isMuted ? t('unmute', 'Unmute') : t('mute', 'Mute')}
+            className={`control-btn ${muted ? 'muted active' : ''}`}
+            title={muted ? t('unmute', 'Unmute') : t('mute', 'Mute')}
           >
-            {isMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
+            {muted ? <FaMicrophoneSlash /> : <FaMicrophone />}
           </button>
 
           <button
@@ -193,7 +197,7 @@ const AudioCallPage = () => {
         )}
 
         {/* Visual Call Waves (when connected) */}
-        {callStatus === 'connected' && !isMuted && (
+        {callStatus === 'connected' && !muted && (
           <div className="flex items-center justify-center space-x-1 mb-8">
             {[...Array(5)].map((_, i) => (
               <div
@@ -206,6 +210,14 @@ const AudioCallPage = () => {
                 }}
               ></div>
             ))}
+          </div>
+        )}
+        {/* Hidden audio elements for media */}
+        <audio ref={(el)=> { if(el && localStream && el.srcObject!==localStream) el.srcObject = localStream; }} autoPlay muted style={{display:'none'}} />
+        <audio ref={(el)=> { if(el && remoteStream && el.srcObject!==remoteStream) el.srcObject = remoteStream; }} autoPlay style={{display:'none'}} />
+        {phase==='active' && (
+          <div style={{position:'absolute', top:8, left:8, background:'rgba(0,0,0,0.55)', color:'#fff', padding:'4px 8px', borderRadius:4, fontSize:11}}>
+            {metrics.bitrateKbps} kbps • loss {metrics.packetLoss}%
           </div>
         )}
       </div>

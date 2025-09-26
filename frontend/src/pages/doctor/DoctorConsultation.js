@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FaVideo, FaPhone, FaArrowLeft } from 'react-icons/fa';
+import { notifyCallInitiated } from '../../utils/notifications';
 
 const DoctorConsultation = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const DoctorConsultation = () => {
       } else {
         navigate('/audio-call', { state: { doctor, patient, callType: 'audio', callSessionId, appointmentId: appt.id } });
       }
+      try { notifyCallInitiated(appt, type); } catch(_){}
     } catch (e) {
       console.error('Failed to initiate call:', e);
     }
@@ -59,14 +61,7 @@ const DoctorConsultation = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gray-50 relative">
-      {/* Back Button */}
-      <button
-        onClick={()=>navigate(-1)}
-        className="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-lg border border-blue-600 text-blue-600 font-medium text-sm absolute top-6 left-6 hover:bg-blue-50 transition-colors"
-      >
-        <FaArrowLeft className="text-sm"/> Back
-      </button>
-      <div className="card w-full max-w-lg relative">
+      <div className="card w-full max-w-xl relative">
         <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Patient Details</h1>
         <div className="space-y-4 mb-8">
           <div className="flex justify-between text-sm"><span className="text-gray-500 font-medium">Patient Name</span><span className="font-semibold text-gray-900">{appt.patientName || appt.patient || 'Patient'}</span></div>

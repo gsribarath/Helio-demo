@@ -6,6 +6,7 @@ import BottomNavigation from './components/BottomNavigation';
 import Login from './components/Login';
 import ScrollToTop from './components/ScrollToTop';
 import BackButton from './components/BackButton';
+import { usePushNotifications } from './hooks/usePushNotifications';
 
 // Pages
 import Home from './pages/Home';
@@ -46,6 +47,9 @@ function App() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Initialize push notifications
+  usePushNotifications();
   
   // Check for existing authentication on app load
   useEffect(() => {

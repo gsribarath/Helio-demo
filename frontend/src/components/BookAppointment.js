@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { appointmentAPI } from '../services/api';
 import { FaTimes, FaCheck } from 'react-icons/fa';
+import { notifyAppointmentBooked } from '../utils/notifications';
 
 const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
   const { t } = useTranslation();
@@ -108,8 +109,9 @@ const BookAppointment = ({ doctor, isOpen, onClose, onSubmit }) => {
           durationMinutes: 30, // default duration for auto-complete logic
           createdAt: new Date().toISOString()
         };
-        existing.push(newAppointment);
-        localStorage.setItem(storageKey, JSON.stringify(existing));
+  existing.push(newAppointment);
+  localStorage.setItem(storageKey, JSON.stringify(existing));
+  try { notifyAppointmentBooked(newAppointment); } catch(_){ }
       } catch (err) {
         console.error('Failed to store appointment locally:', err);
       }
