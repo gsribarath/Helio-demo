@@ -25,7 +25,13 @@ const VideoCallPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { doctor, patient, callType, appointment, callSessionId, appointmentId } = location.state || {};
+  // Persist and restore call context to survive reloads
+  const persisted = (()=>{
+    try { return JSON.parse(localStorage.getItem('helio_call_context')||'null'); } catch { return null; }
+  })();
+  const routeState = location.state || {};
+  const { doctor, patient, callType, appointment, callSessionId, appointmentId } =
+    Object.keys(routeState).length ? routeState : (persisted || {});
   const [phase, setPhase] = useState('ringing'); // ringing | active | ended | declined
 
   // Call states
@@ -59,9 +65,14 @@ const VideoCallPage = () => {
   // Lifecycle: ringing -> active after patient accept (patient auto-accept for doctor side)
   useEffect(() => {
     if (!doctor || !patient) {
+      // If no context, redirect stays. Otherwise continue.
       navigate('/');
       return;
     }
+    // Save latest call context
+    try {
+      localStorage.setItem('helio_call_context', JSON.stringify({ doctor, patient, callType, appointment, callSessionId, appointmentId }));
+    } catch {}
     // For doctor side auto start; for patient side wait for accept UI
     const isDoctorSide = !patient.name || patient.name.toLowerCase() === 'patient' ? false : true; // heuristic
     if (isDoctorSide) {
@@ -205,6 +216,7 @@ const VideoCallPage = () => {
       const updated = arr.map(a=> a.id===appointmentId ? { ...a, callType:null, callSessionId:null } : a);
       localStorage.setItem(key, JSON.stringify(updated));
     } catch(e){ console.error('Failed to cleanup call session', e); }
+    try { localStorage.removeItem('helio_call_context'); } catch {}
   };
 
   // Show controls on mouse move
@@ -287,6 +299,33 @@ const VideoCallPage = () => {
             <div className="vc-timer">{formatTime(callDuration)}</div>
             <div className="vc-status">{t('available')} • {doctor.experience || 0} yrs</div>
             <div className="vc-langs">{t('languages')}: <TransText text={doctor.languages || 'English'} /></div>
+          </div>
+          {/* Fixed Back button at the bottom of left sidebar */}
+          <div className="vc-back-wrap">
+            <button
+              type="button"
+              className="btn-blue vc-back-btn"
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                focusable="false"
+                style={{marginRight:6}}
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              <span style={{color:'#fff'}}>Back</span>
+            </button>
           </div>
         </aside>
 

@@ -227,7 +227,7 @@ const DoctorPatientInfo = () => {
   if (!patient) {
     return (
       <div className="max-w-3xl mx-auto py-12 px-4">
-        <button onClick={() => navigate(-1)} className="btn btn-outline mb-6" aria-label="Go Back">
+        <button onClick={() => navigate(-1)} className="btn-blue mb-6" aria-label="Go Back" style={{display:'inline-flex',alignItems:'center',gap:'8px'}}>
           <FaArrowLeft className="mr-2"/> Back
         </button>
         <div className="bg-white border border-border-light rounded-lg p-8 text-center shadow-sm">
@@ -241,7 +241,7 @@ const DoctorPatientInfo = () => {
 
   return (
   <div className="max-w-7xl mx-auto py-8 px-2 sm:px-4 pb-28">
-      <button onClick={() => navigate(-1)} className="btn btn-outline mb-6" aria-label="Go Back">
+      <button onClick={() => navigate(-1)} className="btn-blue mb-6" aria-label="Go Back" style={{display:'inline-flex',alignItems:'center',gap:'8px'}}>
         <FaArrowLeft className="mr-2"/> Back
       </button>
 

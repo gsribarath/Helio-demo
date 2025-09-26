@@ -860,6 +860,17 @@ code {
 }
 .btn-outline-blue:hover { background: var(--primary-light); }
 
+/* Ensure outline style isn't overridden by later .btn rules */
+.btn.btn-outline-blue {
+  border: 2px solid var(--primary-color) !important;
+  background: #fff !important;
+  color: var(--primary-color) !important;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Enhanced Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

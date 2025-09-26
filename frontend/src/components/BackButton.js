@@ -30,7 +30,23 @@ export default function BackButton(){
         onClick={goBack}
         aria-label="Go back"
       >
-        ← Back
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          focusable="false"
+          style={{marginRight:6}}
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span style={{color:'#fff'}}>Back</span>
       </button>
     </div>
   );

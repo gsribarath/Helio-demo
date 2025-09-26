@@ -1,7 +1,11 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+<<<<<<< HEAD
+import { FaVideo, FaPhone } from 'react-icons/fa';
+=======
 import { FaVideo, FaPhone, FaArrowLeft } from 'react-icons/fa';
 import { notifyCallInitiated } from '../../utils/notifications';
+>>>>>>> 4a629f7e88f974d6c01589cb27f45f5dffb206a7
 
 const DoctorConsultation = () => {
   const navigate = useNavigate();
@@ -53,7 +57,7 @@ const DoctorConsultation = () => {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="card max-w-md text-center">
           <p className="text-gray-700 font-medium mb-4">Appointment not found or no longer available.</p>
-          <button onClick={()=>navigate('/doctor')} className="btn btn-outline w-full">Back to Dashboard</button>
+          <button onClick={()=>navigate('/doctor')} className="btn-blue w-full" style={{justifyContent:'center'}}>Back to Dashboard</button>
         </div>
       </div>
     );
@@ -61,7 +65,11 @@ const DoctorConsultation = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-gray-50 relative">
+<<<<<<< HEAD
+      <div className="card w-full max-w-lg relative">
+=======
       <div className="card w-full max-w-xl relative">
+>>>>>>> 4a629f7e88f974d6c01589cb27f45f5dffb206a7
         <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Patient Details</h1>
         <div className="space-y-4 mb-8">
           <div className="flex justify-between text-sm"><span className="text-gray-500 font-medium">Patient Name</span><span className="font-semibold text-gray-900">{appt.patientName || appt.patient || 'Patient'}</span></div>
