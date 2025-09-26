@@ -1,6 +1,111 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaEdit, FaTrash, FaSyncAlt, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
 
+// Base 100 medicines (Ph01 - Ph100) requested to appear in pharmacist list
+// Dates converted to ISO (YYYY-MM-DD) for reliable Date parsing
+const patientSeed = [
+  { id: 'Ph01', name: 'Paracetamol 500mg', category: 'Pain Relief', stock: 150, expiry: '2025-12-31' },
+  { id: 'Ph02', name: 'Amoxicillin 250mg', category: 'Antibiotics', stock: 12, expiry: '2024-08-15' },
+  { id: 'Ph03', name: 'Cetirizine 10mg', category: 'Antihistamines', stock: 0, expiry: '2025-03-20' },
+  { id: 'Ph04', name: 'Metformin 500mg', category: 'Diabetes', stock: 75, expiry: '2025-11-10' },
+  { id: 'Ph05', name: 'Omeprazole 20mg', category: 'Gastric', stock: 18, expiry: '2024-12-05' },
+  { id: 'Ph06', name: 'Vitamin D3 60000 IU', category: 'Vitamins', stock: 200, expiry: '2026-01-15' },
+  { id: 'Ph07', name: 'Amlodipine 5mg', category: 'Antihypertensives', stock: 110, expiry: '2026-04-30' },
+  { id: 'Ph08', name: 'Losartan 50mg', category: 'Antihypertensives', stock: 95, expiry: '2025-10-31' },
+  { id: 'Ph09', name: 'Atorvastatin 10mg', category: 'Lipid Lowering', stock: 80, expiry: '2026-02-28' },
+  { id: 'Ph10', name: 'Aspirin 75mg', category: 'Antiplatelet', stock: 140, expiry: '2025-08-31' },
+  { id: 'Ph11', name: 'Clopidogrel 75mg', category: 'Antiplatelet', stock: 60, expiry: '2026-03-31' },
+  { id: 'Ph12', name: 'Levothyroxine 50mcg', category: 'Thyroid', stock: 160, expiry: '2026-05-31' },
+  { id: 'Ph13', name: 'Salbutamol Inhaler 100mcg', category: 'Respiratory', stock: 35, expiry: '2025-09-30' },
+  { id: 'Ph14', name: 'Budesonide Inhaler 200mcg', category: 'Respiratory', stock: 25, expiry: '2025-12-31' },
+  { id: 'Ph15', name: 'Doxycycline 100mg', category: 'Antibiotics', stock: 50, expiry: '2025-06-30' },
+  { id: 'Ph16', name: 'Metronidazole 400mg', category: 'Antibiotics', stock: 65, expiry: '2025-07-31' },
+  { id: 'Ph17', name: 'ORS Sachet', category: 'Electrolytes', stock: 300, expiry: '2026-08-31' },
+  { id: 'Ph18', name: 'Zinc Sulphate 20mg', category: 'Supplements', stock: 220, expiry: '2026-01-31' },
+  { id: 'Ph19', name: 'Iron Folic Acid', category: 'Supplements', stock: 180, expiry: '2026-02-28' },
+  { id: 'Ph20', name: 'Calcium + Vitamin D3', category: 'Supplements', stock: 130, expiry: '2026-04-30' },
+  { id: 'Ph21', name: 'Ibuprofen 400mg', category: 'Pain Relief', stock: 95, expiry: '2025-09-30' },
+  { id: 'Ph22', name: 'Diclofenac 50mg', category: 'Pain Relief', stock: 70, expiry: '2025-10-31' },
+  { id: 'Ph23', name: 'Loratadine 10mg', category: 'Antihistamines', stock: 85, expiry: '2026-03-31' },
+  { id: 'Ph24', name: 'Ondansetron 4mg', category: 'Antiemetic', stock: 60, expiry: '2025-07-31' },
+  { id: 'Ph25', name: 'Loperamide 2mg', category: 'Antidiarrheal', stock: 90, expiry: '2025-08-31' },
+  { id: 'Ph26', name: 'Pantoprazole 40mg', category: 'Gastric', stock: 100, expiry: '2026-06-30' },
+  { id: 'Ph27', name: 'Furosemide 40mg', category: 'Diuretics', stock: 85, expiry: '2026-01-31' },
+  { id: 'Ph28', name: 'Hydrochlorothiazide 12.5mg', category: 'Diuretics', stock: 90, expiry: '2025-12-31' },
+  { id: 'Ph29', name: 'Spironolactone 25mg', category: 'Diuretics', stock: 70, expiry: '2026-02-28' },
+  { id: 'Ph30', name: 'Glibenclamide 5mg', category: 'Diabetes', stock: 55, expiry: '2025-11-30' },
+  { id: 'Ph31', name: 'Insulin Regular', category: 'Diabetes', stock: 20, expiry: '2025-10-31' },
+  { id: 'Ph32', name: 'Insulin NPH', category: 'Diabetes', stock: 18, expiry: '2025-10-31' },
+  { id: 'Ph33', name: 'Azithromycin 500mg', category: 'Antibiotics', stock: 62, expiry: '2025-07-31' },
+  { id: 'Ph34', name: 'Ciprofloxacin 500mg', category: 'Antibiotics', stock: 58, expiry: '2025-08-31' },
+  { id: 'Ph35', name: 'Trimethoprim/Sulfamethoxazole', category: 'Antibiotics', stock: 64, expiry: '2026-03-31' },
+  { id: 'Ph36', name: 'Fluconazole 150mg', category: 'Antifungal', stock: 47, expiry: '2026-02-28' },
+  { id: 'Ph37', name: 'Albendazole 400mg', category: 'Antiparasitic', stock: 52, expiry: '2026-05-31' },
+  { id: 'Ph38', name: 'Ivermectin 12mg', category: 'Antiparasitic', stock: 49, expiry: '2026-04-30' },
+  { id: 'Ph39', name: 'Acyclovir 400mg', category: 'Antiviral', stock: 44, expiry: '2025-12-31' },
+  { id: 'Ph40', name: 'Prednisolone 10mg', category: 'Steroid', stock: 53, expiry: '2026-01-31' },
+  { id: 'Ph41', name: 'Hydrocortisone 1% Cream', category: 'Dermatology', stock: 40, expiry: '2025-12-31' },
+  { id: 'Ph42', name: 'Clotrimazole 1% Cream', category: 'Antifungal', stock: 42, expiry: '2026-04-30' },
+  { id: 'Ph43', name: 'Miconazole Powder', category: 'Antifungal', stock: 38, expiry: '2026-06-30' },
+  { id: 'Ph44', name: 'Povidone Iodine 10%', category: 'Antiseptic', stock: 55, expiry: '2026-03-31' },
+  { id: 'Ph45', name: 'Chlorhexidine Solution', category: 'Antiseptic', stock: 60, expiry: '2026-02-28' },
+  { id: 'Ph46', name: 'Lidocaine 2% Gel', category: 'Anesthetic', stock: 33, expiry: '2025-12-31' },
+  { id: 'Ph47', name: 'ORS Low Osmolarity', category: 'Electrolytes', stock: 210, expiry: '2026-07-31' },
+  { id: 'Ph48', name: 'Magnesium Sulphate', category: 'Minerals', stock: 48, expiry: '2026-05-31' },
+  { id: 'Ph49', name: 'Folic Acid 5mg', category: 'Supplements', stock: 150, expiry: '2026-04-30' },
+  { id: 'Ph50', name: 'Vitamin B Complex', category: 'Vitamins', stock: 122, expiry: '2026-02-28' },
+  { id: 'Ph51', name: 'Multivitamin Syrup', category: 'Vitamins', stock: 90, expiry: '2025-11-30' },
+  { id: 'Ph52', name: 'Sodium Chloride 0.9%', category: 'IV Fluids', stock: 75, expiry: '2025-09-30' },
+  { id: 'Ph53', name: "Ringer's Lactate", category: 'IV Fluids', stock: 66, expiry: '2025-08-31' },
+  { id: 'Ph54', name: 'Dextrose 5%', category: 'IV Fluids', stock: 70, expiry: '2025-07-31' },
+  { id: 'Ph55', name: 'Adrenaline 1mg/ml', category: 'Emergency', stock: 40, expiry: '2025-12-31' },
+  { id: 'Ph56', name: 'Atropine 0.6mg/ml', category: 'Emergency', stock: 28, expiry: '2025-12-31' },
+  { id: 'Ph57', name: 'Diazepam 5mg', category: 'Neurology', stock: 36, expiry: '2026-01-31' },
+  { id: 'Ph58', name: 'Amitriptyline 25mg', category: 'Neurology', stock: 25, expiry: '2026-03-31' },
+  { id: 'Ph59', name: 'Sertraline 50mg', category: 'Neurology', stock: 22, expiry: '2026-05-31' },
+  { id: 'Ph60', name: 'Olanzapine 5mg', category: 'Neurology', stock: 20, expiry: '2026-04-30' },
+  { id: 'Ph61', name: 'Sodium Valproate 200mg', category: 'Neurology', stock: 18, expiry: '2026-02-28' },
+  { id: 'Ph62', name: 'Carbamazepine 200mg', category: 'Neurology', stock: 16, expiry: '2026-03-31' },
+  { id: 'Ph63', name: 'Amoxicillin-Clavulanate 625mg', category: 'Antibiotics', stock: 34, expiry: '2025-09-30' },
+  { id: 'Ph64', name: 'Cefixime 200mg', category: 'Antibiotics', stock: 30, expiry: '2025-10-31' },
+  { id: 'Ph65', name: 'Ceftriaxone 1g', category: 'Antibiotics', stock: 28, expiry: '2025-12-31' },
+  { id: 'Ph66', name: 'Ranitidine 150mg', category: 'Gastric', stock: 24, expiry: '2025-11-30' },
+  { id: 'Ph67', name: 'Sucralfate Suspension', category: 'Gastric', stock: 32, expiry: '2026-04-30' },
+  { id: 'Ph68', name: 'Montelukast 10mg', category: 'Respiratory', stock: 40, expiry: '2026-01-31' },
+  { id: 'Ph69', name: 'Beclomethasone Inhaler', category: 'Respiratory', stock: 15, expiry: '2025-12-31' },
+  { id: 'Ph70', name: 'Guaifenesin Syrup', category: 'Respiratory', stock: 52, expiry: '2026-03-31' },
+  { id: 'Ph71', name: 'Dextromethorphan Syrup', category: 'Respiratory', stock: 47, expiry: '2026-04-30' },
+  { id: 'Ph72', name: 'Chlorpheniramine 4mg', category: 'Antihistamines', stock: 64, expiry: '2026-02-28' },
+  { id: 'Ph73', name: 'Meclizine 25mg', category: 'Antiemetic', stock: 42, expiry: '2026-05-31' },
+  { id: 'Ph74', name: 'Domperidone 10mg', category: 'Antiemetic', stock: 30, expiry: '2025-11-30' },
+  { id: 'Ph75', name: 'Clotrimazole Vaginal Tablet', category: 'Antifungal', stock: 22, expiry: '2026-03-31' },
+  { id: 'Ph76', name: 'Tranexamic Acid 500mg', category: 'Hematology', stock: 28, expiry: '2026-01-31' },
+  { id: 'Ph77', name: 'Mefenamic Acid 250mg', category: 'Pain Relief', stock: 26, expiry: '2026-02-28' },
+  { id: 'Ph78', name: 'Hyoscine Butylbromide 10mg', category: 'Gastrointestinal', stock: 36, expiry: '2026-04-30' },
+  { id: 'Ph79', name: 'Cyclopentolate Eye Drops', category: 'Ophthalmic', stock: 18, expiry: '2026-03-31' },
+  { id: 'Ph80', name: 'Timolol Eye Drops', category: 'Ophthalmic', stock: 14, expiry: '2026-02-28' },
+  { id: 'Ph81', name: 'Sodium Bicarbonate', category: 'Gastrointestinal', stock: 20, expiry: '2026-04-30' },
+  { id: 'Ph82', name: 'Bisacodyl 5mg', category: 'Laxative', stock: 58, expiry: '2026-01-31' },
+  { id: 'Ph83', name: 'Sennosides Tablets', category: 'Laxative', stock: 58, expiry: '2026-03-31' },
+  { id: 'Ph84', name: 'Oral Contraceptive Pill', category: 'Family Planning', stock: 40, expiry: '2026-05-31' },
+  { id: 'Ph85', name: 'Emergency Contraceptive', category: 'Family Planning', stock: 44, expiry: '2026-02-28' },
+  { id: 'Ph86', name: 'Tetanus Toxoid Vaccine', category: 'Vaccines', stock: 24, expiry: '2026-06-30' },
+  { id: 'Ph87', name: 'Hepatitis B Vaccine', category: 'Vaccines', stock: 22, expiry: '2026-05-31' },
+  { id: 'Ph88', name: 'Rabies Vaccine', category: 'Vaccines', stock: 18, expiry: '2026-04-30' },
+  { id: 'Ph89', name: 'ORS with Zinc Pack', category: 'Pediatric', stock: 210, expiry: '2026-06-30' },
+  { id: 'Ph90', name: 'Paracetamol Syrup', category: 'Pediatric', stock: 120, expiry: '2026-02-28' },
+  { id: 'Ph91', name: 'Amoxicillin Syrup', category: 'Pediatric', stock: 68, expiry: '2025-12-31' },
+  { id: 'Ph92', name: 'ORS Flavored', category: 'Pediatric', stock: 260, expiry: '2026-04-30' },
+  { id: 'Ph93', name: 'Silver Sulfadiazine Cream', category: 'Burns', stock: 28, expiry: '2026-06-30' },
+  { id: 'Ph94', name: 'Metoclopramide 10mg', category: 'Antiemetic', stock: 70, expiry: '2026-01-31' },
+  { id: 'Ph95', name: 'Propranolol 40mg', category: 'Beta Blocker', stock: 52, expiry: '2026-03-31' },
+  { id: 'Ph96', name: 'Gabapentin 300mg', category: 'Neurology', stock: 36, expiry: '2026-04-30' },
+  { id: 'Ph97', name: 'Clindamycin 300mg', category: 'Antibiotics', stock: 44, expiry: '2025-12-31' },
+  { id: 'Ph98', name: 'Nitrofurantoin 100mg', category: 'Urinary Antiseptic', stock: 47, expiry: '2026-05-31' },
+  { id: 'Ph99', name: 'Isotonic Saline Nasal Spray', category: 'ENT', stock: 54, expiry: '2026-04-30' },
+  { id: 'Ph100', name: 'Acetylcysteine 600mg', category: 'Respiratory', stock: 33, expiry: '2026-06-30' }
+];
+
 const Inventory = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,20 +135,20 @@ const Inventory = () => {
 
   useEffect(()=>{
     const key='helio_inventory';
-    
-    // Clear existing inventory to fix corruption issues
-    console.log('Clearing pharmacy inventory to fix sync issues...');
-    const seed = [];
-    localStorage.setItem(key, JSON.stringify(seed));
-    setItems(seed);
-    
-    // Dispatch update to clear patient inventory too
     try {
-      window.dispatchEvent(new CustomEvent('helio_inventory_updated'));
-    } catch (e) {
-      // Ignore event dispatch errors
-    }
-    
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      // If already seeded with >= 50 items we assume it's fine
+      if(Array.isArray(arr) && arr.length >= 50){
+        setItems(arr);
+        setLoading(false);
+        return;
+      }
+    } catch(e) {}
+
+    // Seed with requested patient list (first 100 entries)
+    const stamped = patientSeed.map(m => ({ ...m, updated: new Date().toISOString() }));
+    localStorage.setItem(key, JSON.stringify(stamped));
+    setItems(stamped);
     setLoading(false);
   },[]);
 

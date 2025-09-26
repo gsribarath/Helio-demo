@@ -157,23 +157,9 @@ const Medicines = () => {
         }
       });
 
-      // Remove duplicates from shared inventory first
-      const uniqueSharedInventory = [];
-      const seenNames = new Set();
-      
+      // Add medicines from shared inventory that don't exist in merged inventory
       sharedInventory.forEach(sharedMed => {
-        const normalizedName = sharedMed.name.toLowerCase().trim();
-        if (!seenNames.has(normalizedName)) {
-          seenNames.add(normalizedName);
-          uniqueSharedInventory.push(sharedMed);
-        }
-      });
-
-      console.log('Unique shared inventory items:', uniqueSharedInventory.length);
-
-      // Add medicines from unique shared inventory that don't exist in merged inventory
-      uniqueSharedInventory.forEach(sharedMed => {
-        // Check if this medicine already exists in merged inventory
+        // Check if this medicine already exists in merged inventory (not just dummy medicines)
         const existsInMerged = mergedMedicines.some(mergedMed => 
           mergedMed.name.toLowerCase().trim() === sharedMed.name.toLowerCase().trim()
         );
@@ -181,7 +167,6 @@ const Medicines = () => {
         if (!existsInMerged) {
           // Add new medicine with sequential ID
           maxId++;
-          console.log(`Adding new medicine: ${sharedMed.name} as Ph${maxId}`);
           const newMedicine = {
             id: `Ph${maxId}`,
             name: sharedMed.name,
@@ -195,8 +180,6 @@ const Medicines = () => {
             requires_prescription: sharedMed.requires_prescription || false
           };
           mergedMedicines.push(newMedicine);
-        } else {
-          console.log(`Medicine already exists, skipping: ${sharedMed.name}`);
         }
       });
 
@@ -225,18 +208,12 @@ const Medicines = () => {
 
   // Auto-reset on component mount to fix any existing corruption
   useEffect(() => {
-    // Always force a complete reset to ensure clean state
-    console.log('Forcing complete inventory reset...');
-    localStorage.removeItem('helio_patient_merged_inventory');
-    
-    // Start fresh with just the base medicines (Ph01-Ph100)
-    setMedicines(dummyMedicines);
-    setLoading(false);
-    
-    // Then check for any shared inventory to merge
-    setTimeout(() => {
-      mergeInventories();
-    }, 100);
+    // Check if we have corruption (more than 150 medicines means likely duplicates)
+    const existingMerged = JSON.parse(localStorage.getItem('helio_patient_merged_inventory') || '[]');
+    if (existingMerged.length > 150) {
+      console.log('Detected corrupted inventory, auto-resetting...');
+      resetPatientInventory();
+    }
   }, []);
 
   useEffect(() => { 
