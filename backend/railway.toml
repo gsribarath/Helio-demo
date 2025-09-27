@@ -1,0 +1,13 @@
+# Railway.app configuration for Helio Backend
+[build]
+  builder = "nixpacks"
+
+[deploy]
+  healthcheckPath = "/api/health"
+  healthcheckTimeout = 300
+  restartPolicyType = "on_failure"
+
+[env]
+  FLASK_ENV = "production"
+  PYTHONPATH = "/app"
+  PORT = "5000"

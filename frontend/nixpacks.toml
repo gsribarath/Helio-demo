@@ -1,0 +1,12 @@
+# Nixpacks configuration for frontend
+[phases.setup]
+providers = ["node"]
+
+[phases.install]
+cmd = "npm ci --production=false"
+
+[phases.build]
+cmd = "npm run build"
+
+[start]
+cmd = "npx serve -s build -l $PORT"

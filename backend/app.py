@@ -128,6 +128,15 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Health check endpoint for Railway
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Helio backend is running',
+        'timestamp': datetime.utcnow().isoformat()
+    }), 200
+
 # Authentication Routes
 @app.route('/api/auth/register', methods=['POST'])
 def register():

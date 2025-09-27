@@ -44,7 +44,44 @@ Helio provides:
 - ✅ Real-Time Medicine Updates
 - ✅ Secure Video Consultations
 
-## 🚀 Getting Started
+## 🚀 Quick Deploy (Get Your Live Link!)
+
+### One-Click Deployment
+```bash
+# Windows
+quick-deploy.bat
+
+# Linux/Mac
+./quick-deploy.sh
+```
+
+### Manual Deployment Options
+
+#### Option 1: Railway.app (Recommended)
+```bash
+python deploy.py
+```
+- ✅ Free PostgreSQL database
+- ✅ Automatic HTTPS
+- ✅ Custom domains
+- ✅ Easy scaling
+
+#### Option 2: Render.com
+```bash
+python deploy_render.py
+```
+- ✅ Free static hosting
+- ✅ Managed PostgreSQL
+- ✅ GitHub integration
+- ✅ Auto-deployments
+
+### Expected Live URLs
+After deployment, your app will be available at:
+- **Frontend**: `https://helio-frontend-xxx.railway.app`
+- **Backend**: `https://helio-backend-xxx.railway.app`
+- **API Health**: `https://helio-backend-xxx.railway.app/api/health`
+
+## 🏠 Local Development
 
 ### Backend Setup
 ```bash
@@ -67,6 +104,57 @@ npm start
 - Improve healthcare delivery and record-keeping
 - Create scalable solution for other rural regions
 
-## 📞 Contact
+## � Demo Credentials
+
+Test the live application with these accounts:
+
+**Patient Portal**:
+- Email: `patient@demo.com`
+- Password: `password123`
+
+**Doctor Portal**:
+- Email: `doctor@demo.com`
+- Password: `password123`
+
+## 🌐 Live Demo Features
+
+Once deployed, your live app includes:
+
+### 👥 For Patients:
+- 📋 Register and create medical profile
+- 👨‍⚕️ Browse available doctors by specialty
+- 📅 Book video consultation appointments
+- 💊 Check real-time medicine availability
+- 📱 Upload prescription images
+- 🏥 View appointment history
+- 🌍 Use in Hindi, English, or Punjabi
+
+### 👨‍⚕️ For Doctors:
+- 📊 Manage patient appointments
+- 👤 View detailed patient profiles
+- 💊 Prescribe medicines
+- 📝 Add consultation notes
+- ⏰ Set availability schedules
+- 📈 Track consultation history
+
+### 🏪 For Pharmacists:
+- 💊 Update medicine inventory
+- 📋 Process prescription requests
+- 📊 Track stock levels
+- ⚠️ Manage low-stock alerts
+
+## 📱 Progressive Web App (PWA)
+
+The deployed app works as a PWA:
+- 📲 Install on mobile devices
+- 🔄 Offline functionality
+- 📊 Push notifications
+- 🚀 Fast loading
+
+## �📞 Contact
 
 Government of Punjab - Department of Higher Education
+
+---
+
+**🎯 Ready to deploy?** Run `quick-deploy.bat` (Windows) or `./quick-deploy.sh` (Mac/Linux) to get your live telemedicine platform in minutes!
