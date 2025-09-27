@@ -1,0 +1,20 @@
+{
+  "name": "helio-telemedicine",
+  "version": "1.0.0",
+  "description": "Complete telemedicine platform for rural healthcare",
+  "main": "server.js",
+  "scripts": {
+    "start": "python app_combined.py",
+    "dev": "python app_combined.py"
+  },
+  "engines": {
+    "python": "3.11.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gsribarath/Helio-demo.git"
+  },
+  "keywords": ["telemedicine", "healthcare", "rural", "flask", "react"],
+  "author": "Helio Team",
+  "license": "MIT"
+}
